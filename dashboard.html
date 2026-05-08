@@ -1,0 +1,1071 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard Comercial · Codefy + Fideliza</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #0a0e17;
+  --bg-card: #131825;
+  --bg-card-hover: #1a2030;
+  --border: #232a3d;
+  --text: #e8ecf4;
+  --text-dim: #8892a8;
+  --text-muted: #5a6378;
+  --accent: #6366f1;
+  --accent-2: #8b5cf6;
+  --green: #10b981;
+  --yellow: #f59e0b;
+  --red: #ef4444;
+  --blue: #3b82f6;
+  --pink: #ec4899;
+  --codefy: #6366f1;
+  --fideliza: #10b981;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  padding: 24px;
+  background-image:
+    radial-gradient(circle at 20% 0%, rgba(99, 102, 241, 0.08), transparent 50%),
+    radial-gradient(circle at 80% 100%, rgba(16, 185, 129, 0.06), transparent 50%);
+}
+
+.container { max-width: 1400px; margin: 0 auto; }
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.header h1 {
+  font-size: 26px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  background: linear-gradient(135deg, #fff 0%, #c4b5fd 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.header p { color: var(--text-dim); font-size: 13px; margin-top: 4px; }
+
+.header-controls { display: flex; gap: 12px; align-items: center; }
+
+.live-indicator {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--text-dim);
+  padding: 6px 12px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 100px;
+}
+
+.live-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--green);
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.5); }
+  50% { opacity: 0.6; box-shadow: 0 0 0 8px rgba(16, 185, 129, 0); }
+}
+
+.btn {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 8px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.btn:hover { background: var(--bg-card-hover); border-color: var(--accent); }
+
+.btn-primary { background: var(--accent); border-color: var(--accent); }
+.btn-primary:hover { background: var(--accent-2); border-color: var(--accent-2); }
+
+/* Filter tabs */
+.filter-tabs {
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  margin-bottom: 24px;
+  width: fit-content;
+}
+
+.filter-tab {
+  padding: 8px 18px;
+  background: transparent;
+  border: none;
+  color: var(--text-dim);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: all 0.2s;
+}
+
+.filter-tab.active {
+  background: var(--accent);
+  color: white;
+}
+
+.filter-tab:hover:not(.active) { color: var(--text); }
+
+/* KPI Cards */
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.kpi-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.2s;
+}
+
+.kpi-card:hover { transform: translateY(-2px); border-color: var(--accent); }
+
+.kpi-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0;
+  width: 40px; height: 40px;
+  background: var(--accent-color, var(--accent));
+  filter: blur(40px);
+  opacity: 0.3;
+}
+
+.kpi-label {
+  font-size: 12px;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+
+.kpi-value {
+  font-size: 32px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin-bottom: 4px;
+}
+
+.kpi-sub { font-size: 12px; color: var(--text-muted); }
+
+.kpi-icon {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  font-size: 20px;
+  opacity: 0.5;
+}
+
+/* Layout grid */
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+@media (max-width: 900px) {
+  .dashboard-grid { grid-template-columns: 1fr; }
+}
+
+.panel {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px;
+}
+
+.panel-title {
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: var(--text);
+}
+
+.panel-title-sub { font-size: 11px; color: var(--text-muted); font-weight: 400; }
+
+.chart-container { position: relative; height: 240px; }
+
+/* Funnel */
+.funnel { display: flex; flex-direction: column; gap: 8px; }
+
+.funnel-stage {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: linear-gradient(90deg, var(--stage-color, var(--accent)) var(--stage-pct, 0%), var(--bg-card-hover) var(--stage-pct, 0%));
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  transition: all 0.3s;
+}
+
+.funnel-stage:hover { transform: translateX(4px); }
+
+.funnel-label { font-size: 13px; font-weight: 500; }
+.funnel-count { font-size: 18px; font-weight: 700; }
+.funnel-pct { font-size: 11px; color: var(--text-dim); margin-left: 8px; }
+
+/* Table */
+.table-panel { margin-bottom: 24px; }
+
+.table-controls {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.search-input, .filter-select {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.search-input { flex: 1; min-width: 200px; }
+.search-input:focus, .filter-select:focus { border-color: var(--accent); }
+
+.table-wrap {
+  overflow-x: auto;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  max-height: 600px;
+  overflow-y: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+thead {
+  position: sticky;
+  top: 0;
+  background: var(--bg-card-hover);
+  z-index: 10;
+}
+
+th {
+  text-align: left;
+  padding: 12px;
+  font-weight: 600;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-dim);
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+}
+
+th:hover { color: var(--text); }
+th.sorted { color: var(--accent); }
+
+td {
+  padding: 12px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text);
+}
+
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: rgba(99, 102, 241, 0.04); }
+
+.badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 100px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.badge-codefy { background: rgba(99, 102, 241, 0.15); color: #a5b4fc; }
+.badge-fideliza { background: rgba(16, 185, 129, 0.15); color: #6ee7b7; }
+.badge-lead { background: rgba(148, 163, 184, 0.15); color: #cbd5e1; }
+.badge-contactado { background: rgba(59, 130, 246, 0.15); color: #93c5fd; }
+.badge-conversacion { background: rgba(245, 158, 11, 0.15); color: #fcd34d; }
+.badge-cita { background: rgba(139, 92, 246, 0.15); color: #c4b5fd; }
+.badge-calificado { background: rgba(16, 185, 129, 0.15); color: #6ee7b7; }
+.badge-perdido { background: rgba(239, 68, 68, 0.15); color: #fca5a5; }
+
+/* Loading & error states */
+.loading-state, .error-state, .empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--text-dim);
+}
+
+.spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin: 0 auto 16px;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.error-state { color: var(--red); }
+.error-state .retry { margin-top: 12px; }
+
+.last-updated {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+
+/* Goals section */
+.goals-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.goal-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 16px;
+}
+
+.goal-label { font-size: 11px; color: var(--text-dim); text-transform: uppercase; margin-bottom: 8px; }
+.goal-numbers { display: flex; align-items: baseline; gap: 6px; margin-bottom: 8px; }
+.goal-current { font-size: 22px; font-weight: 700; }
+.goal-target { font-size: 13px; color: var(--text-muted); }
+
+.progress-bar {
+  height: 6px;
+  background: var(--bg);
+  border-radius: 100px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent), var(--accent-2));
+  border-radius: 100px;
+  transition: width 0.6s ease;
+}
+
+.section-title {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 12px;
+  margin-top: 8px;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.section-title::before {
+  content: '';
+  width: 4px;
+  height: 16px;
+  background: var(--accent);
+  border-radius: 100px;
+}
+
+/* Follow-ups alert */
+.followup-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
+.followup-row:last-child { border-bottom: none; }
+.followup-overdue { color: var(--red); }
+.followup-today { color: var(--yellow); }
+.followup-soon { color: var(--text); }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div>
+      <h1>Dashboard Comercial</h1>
+      <p>Codefy + Fideliza · Seguimiento en vivo del pipeline SDR</p>
+    </div>
+    <div class="header-controls">
+      <div class="live-indicator">
+        <div class="live-dot"></div>
+        <span id="liveStatus">En vivo</span>
+      </div>
+      <button class="btn" onclick="loadData()">↻ Actualizar</button>
+    </div>
+  </div>
+
+  <!-- FILTER TABS -->
+  <div class="filter-tabs">
+    <button class="filter-tab active" data-filter="all">Todos</button>
+    <button class="filter-tab" data-filter="Codefy">Codefy</button>
+    <button class="filter-tab" data-filter="Fideliza">Fideliza</button>
+  </div>
+
+  <!-- LOADING / ERROR / CONTENT -->
+  <div id="loadingState" class="loading-state">
+    <div class="spinner"></div>
+    <div>Cargando datos del Sheet…</div>
+  </div>
+
+  <div id="errorState" class="error-state" style="display:none;">
+    <div style="font-size: 32px; margin-bottom: 8px;">⚠️</div>
+    <div id="errorMessage">No se pudo cargar el Sheet.</div>
+    <button class="btn retry" onclick="loadData()">Reintentar</button>
+  </div>
+
+  <div id="dashboardContent" style="display: none;">
+
+    <!-- KPIs PRINCIPALES -->
+    <div class="section-title">Resumen general</div>
+    <div class="kpi-grid" id="kpiGrid"></div>
+
+    <!-- METAS -->
+    <div class="section-title">Metas vs realidad</div>
+    <div class="goals-grid" id="goalsGrid"></div>
+
+    <!-- CHARTS GRID -->
+    <div class="dashboard-grid">
+
+      <div class="panel">
+        <div class="panel-title">
+          <span>Pipeline por etapa</span>
+          <span class="panel-title-sub" id="funnelTotal"></span>
+        </div>
+        <div class="funnel" id="funnel"></div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-title">
+          <span>Distribución por proyecto</span>
+        </div>
+        <div class="chart-container">
+          <canvas id="projectChart"></canvas>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-title">
+          <span>Canal de prospección</span>
+        </div>
+        <div class="chart-container">
+          <canvas id="channelChart"></canvas>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-title">
+          <span>Próximos seguimientos</span>
+          <span class="panel-title-sub">7 días</span>
+        </div>
+        <div id="followupsList" style="max-height: 240px; overflow-y: auto;"></div>
+      </div>
+
+    </div>
+
+    <!-- TABLE -->
+    <div class="panel table-panel">
+      <div class="panel-title">
+        <span>Base de leads</span>
+        <span class="panel-title-sub" id="tableCount"></span>
+      </div>
+      <div class="table-controls">
+        <input type="text" class="search-input" id="searchInput" placeholder="Buscar por empresa, persona, cargo…">
+        <select class="filter-select" id="statusFilter">
+          <option value="">Todos los estados</option>
+        </select>
+        <select class="filter-select" id="channelFilter">
+          <option value="">Todos los canales</option>
+        </select>
+      </div>
+      <div class="table-wrap">
+        <table id="dataTable">
+          <thead><tr id="tableHead"></tr></thead>
+          <tbody id="tableBody"></tbody>
+        </table>
+      </div>
+      <div class="last-updated" id="lastUpdated"></div>
+    </div>
+
+  </div>
+
+</div>
+
+<script>
+// ============================================
+// CONFIG
+// ============================================
+const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRT1czGk5oSXvz8m0R6vu7tg0W-BAQ6lvBHcy3AkhumpWquwpjbOKqKOKMQL0tZQ2QTPnOPOlBUQ7Wl/pub?output=csv';
+const REFRESH_INTERVAL_MS = 60000; // refresca cada 60s
+
+// Metas SDR (ajustables)
+const GOALS = {
+  toquesDiarios: 50,
+  toquesSemanales: 250,
+  citasSemanales: 10,
+  citasCalificadasSemanales: 8
+};
+
+// ============================================
+// STATE
+// ============================================
+let allData = [];
+let filteredData = [];
+let currentFilter = 'all';
+let columns = [];
+let charts = {};
+let sortState = { col: null, asc: true };
+
+// ============================================
+// HELPERS
+// ============================================
+function normalizeKey(k) {
+  return (k || '').toString().toLowerCase().trim()
+    .replace(/[áàä]/g, 'a').replace(/[éèë]/g, 'e').replace(/[íìï]/g, 'i')
+    .replace(/[óòö]/g, 'o').replace(/[úùü]/g, 'u').replace(/ñ/g, 'n')
+    .replace(/[^a-z0-9]/g, '');
+}
+
+function findCol(row, candidates) {
+  const keys = Object.keys(row);
+  for (const cand of candidates) {
+    const normCand = normalizeKey(cand);
+    const match = keys.find(k => normalizeKey(k) === normCand);
+    if (match) return match;
+  }
+  // Match parcial
+  for (const cand of candidates) {
+    const normCand = normalizeKey(cand);
+    const match = keys.find(k => normalizeKey(k).includes(normCand));
+    if (match) return match;
+  }
+  return null;
+}
+
+function getStatusBadgeClass(status) {
+  const s = normalizeKey(status);
+  if (s.includes('lead') && !s.includes('contact')) return 'badge-lead';
+  if (s.includes('contact')) return 'badge-contactado';
+  if (s.includes('conversa')) return 'badge-conversacion';
+  if (s.includes('calific')) return 'badge-calificado';
+  if (s.includes('cita') || s.includes('agenda')) return 'badge-cita';
+  if (s.includes('perdid') || s.includes('descart') || s.includes('cerrad')) return 'badge-perdido';
+  return 'badge-lead';
+}
+
+function parseDate(str) {
+  if (!str) return null;
+  const s = str.toString().trim();
+  // Intenta ISO
+  let d = new Date(s);
+  if (!isNaN(d.getTime())) return d;
+  // Intenta DD/MM/YYYY o DD-MM-YYYY
+  const m = s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})$/);
+  if (m) {
+    let year = parseInt(m[3]);
+    if (year < 100) year += 2000;
+    d = new Date(year, parseInt(m[2]) - 1, parseInt(m[1]));
+    if (!isNaN(d.getTime())) return d;
+  }
+  return null;
+}
+
+function daysFromNow(date) {
+  if (!date) return null;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const target = new Date(date);
+  target.setHours(0, 0, 0, 0);
+  return Math.round((target - today) / (1000 * 60 * 60 * 24));
+}
+
+// ============================================
+// DATA LOADING
+// ============================================
+async function loadData() {
+  document.getElementById('loadingState').style.display = 'block';
+  document.getElementById('errorState').style.display = 'none';
+  document.getElementById('dashboardContent').style.display = 'none';
+
+  try {
+    // Cache-busting para garantizar datos en vivo
+    const url = CSV_URL + '&t=' + Date.now();
+    const response = await fetch(url);
+    if (!response.ok) throw new Error('HTTP ' + response.status);
+    const text = await response.text();
+
+    const parsed = Papa.parse(text, { header: true, skipEmptyLines: true });
+    allData = parsed.data.filter(r => Object.values(r).some(v => v && v.toString().trim()));
+    columns = parsed.meta.fields || [];
+
+    if (allData.length === 0) throw new Error('El Sheet está vacío.');
+
+    document.getElementById('loadingState').style.display = 'none';
+    document.getElementById('dashboardContent').style.display = 'block';
+
+    applyFilter();
+    document.getElementById('lastUpdated').textContent =
+      'Última actualización: ' + new Date().toLocaleString('es-MX');
+  } catch (err) {
+    document.getElementById('loadingState').style.display = 'none';
+    document.getElementById('errorState').style.display = 'block';
+    document.getElementById('errorMessage').textContent =
+      'Error al cargar el Sheet: ' + err.message + '. Verifica que esté publicado como CSV.';
+  }
+}
+
+// ============================================
+// FILTERING & RENDERING
+// ============================================
+function applyFilter() {
+  if (allData.length === 0) return;
+
+  const projectCol = findCol(allData[0], ['proyecto', 'project', 'producto']);
+
+  if (currentFilter === 'all' || !projectCol) {
+    filteredData = [...allData];
+  } else {
+    filteredData = allData.filter(r => {
+      const val = (r[projectCol] || '').toString().toLowerCase();
+      return val.includes(currentFilter.toLowerCase());
+    });
+  }
+
+  renderKPIs();
+  renderGoals();
+  renderFunnel();
+  renderProjectChart();
+  renderChannelChart();
+  renderFollowups();
+  renderTable();
+  populateFilters();
+}
+
+function renderKPIs() {
+  const total = filteredData.length;
+  const sample = filteredData[0] || allData[0] || {};
+
+  const statusCol = findCol(sample, ['estado', 'status', 'etapa', 'stage']);
+  const projectCol = findCol(sample, ['proyecto', 'project', 'producto']);
+
+  let citas = 0, calificadas = 0, contactados = 0, codefyCount = 0, fidelizaCount = 0;
+
+  filteredData.forEach(r => {
+    const status = (r[statusCol] || '').toString().toLowerCase();
+    if (status.includes('cita') || status.includes('agenda')) citas++;
+    if (status.includes('calific')) calificadas++;
+    if (status.includes('contact') || status.includes('conversa') || status.includes('cita') || status.includes('calific')) contactados++;
+
+    const proj = (r[projectCol] || '').toString().toLowerCase();
+    if (proj.includes('codefy')) codefyCount++;
+    if (proj.includes('fideliza')) fidelizaCount++;
+  });
+
+  const tasaContacto = total > 0 ? Math.round((contactados / total) * 100) : 0;
+
+  const kpis = [
+    { label: 'Total leads', value: total, sub: `${codefyCount} Codefy · ${fidelizaCount} Fideliza`, color: 'var(--accent)', icon: '👥' },
+    { label: 'Contactados', value: contactados, sub: `${tasaContacto}% del total`, color: 'var(--blue)', icon: '✉️' },
+    { label: 'Citas agendadas', value: citas, sub: total > 0 ? `${Math.round((citas/total)*100)}% conversión` : '—', color: 'var(--accent-2)', icon: '📅' },
+    { label: 'Citas calificadas', value: calificadas, sub: citas > 0 ? `${Math.round((calificadas/citas)*100)}% de las citas` : '—', color: 'var(--green)', icon: '✅' }
+  ];
+
+  document.getElementById('kpiGrid').innerHTML = kpis.map(k => `
+    <div class="kpi-card" style="--accent-color: ${k.color}">
+      <div class="kpi-icon">${k.icon}</div>
+      <div class="kpi-label">${k.label}</div>
+      <div class="kpi-value">${k.value}</div>
+      <div class="kpi-sub">${k.sub}</div>
+    </div>
+  `).join('');
+}
+
+function renderGoals() {
+  const sample = filteredData[0] || allData[0] || {};
+  const statusCol = findCol(sample, ['estado', 'status', 'etapa']);
+  const dateCol = findCol(sample, ['fecha contacto', 'fecha', 'fecha primer contacto', 'fecha seguimiento']);
+
+  // Esta semana
+  const today = new Date();
+  const weekStart = new Date(today);
+  weekStart.setDate(today.getDate() - today.getDay() + 1); // lunes
+  weekStart.setHours(0,0,0,0);
+
+  let toquesEstaSem = 0, citasEstaSem = 0, calificadasEstaSem = 0, toquesHoy = 0;
+
+  filteredData.forEach(r => {
+    const date = parseDate(r[dateCol]);
+    if (!date) return;
+    const status = (r[statusCol] || '').toString().toLowerCase();
+    if (date >= weekStart) {
+      toquesEstaSem++;
+      if (status.includes('cita') || status.includes('agenda')) citasEstaSem++;
+      if (status.includes('calific')) calificadasEstaSem++;
+    }
+    const todayStart = new Date(); todayStart.setHours(0,0,0,0);
+    if (date >= todayStart) toquesHoy++;
+  });
+
+  const goals = [
+    { label: 'Toques hoy', current: toquesHoy, target: GOALS.toquesDiarios },
+    { label: 'Toques esta semana', current: toquesEstaSem, target: GOALS.toquesSemanales },
+    { label: 'Citas esta semana', current: citasEstaSem, target: GOALS.citasSemanales },
+    { label: 'Calificadas esta semana', current: calificadasEstaSem, target: GOALS.citasCalificadasSemanales }
+  ];
+
+  document.getElementById('goalsGrid').innerHTML = goals.map(g => {
+    const pct = Math.min(100, Math.round((g.current / g.target) * 100));
+    return `
+      <div class="goal-card">
+        <div class="goal-label">${g.label}</div>
+        <div class="goal-numbers">
+          <span class="goal-current">${g.current}</span>
+          <span class="goal-target">/ ${g.target}</span>
+        </div>
+        <div class="progress-bar"><div class="progress-fill" style="width: ${pct}%"></div></div>
+      </div>
+    `;
+  }).join('');
+}
+
+function renderFunnel() {
+  const sample = filteredData[0] || allData[0] || {};
+  const statusCol = findCol(sample, ['estado', 'status', 'etapa']);
+
+  const stages = [
+    { label: 'Lead', match: s => s && !s.includes('contact') && !s.includes('conversa') && !s.includes('cita') && !s.includes('calific') && !s.includes('perdid'), color: '#94a3b8' },
+    { label: 'Contactado', match: s => s.includes('contact') && !s.includes('conversa'), color: '#3b82f6' },
+    { label: 'En conversación', match: s => s.includes('conversa'), color: '#f59e0b' },
+    { label: 'Cita agendada', match: s => (s.includes('cita') || s.includes('agenda')) && !s.includes('calific'), color: '#8b5cf6' },
+    { label: 'Calificada', match: s => s.includes('calific'), color: '#10b981' }
+  ];
+
+  const counts = stages.map(stage => {
+    return filteredData.filter(r => stage.match((r[statusCol] || '').toString().toLowerCase())).length;
+  });
+
+  const max = Math.max(...counts, 1);
+  const total = filteredData.length;
+
+  document.getElementById('funnelTotal').textContent = `${total} leads`;
+  document.getElementById('funnel').innerHTML = stages.map((s, i) => {
+    const count = counts[i];
+    const pct = max > 0 ? Math.round((count / max) * 100) : 0;
+    const totalPct = total > 0 ? Math.round((count / total) * 100) : 0;
+    return `
+      <div class="funnel-stage" style="--stage-color: ${s.color}33; --stage-pct: ${pct}%">
+        <div>
+          <span class="funnel-label">${s.label}</span>
+          <span class="funnel-pct">${totalPct}%</span>
+        </div>
+        <span class="funnel-count">${count}</span>
+      </div>
+    `;
+  }).join('');
+}
+
+function renderProjectChart() {
+  const sample = filteredData[0] || allData[0] || {};
+  const projectCol = findCol(sample, ['proyecto', 'project', 'producto']);
+  if (!projectCol) return;
+
+  const counts = {};
+  filteredData.forEach(r => {
+    const v = (r[projectCol] || 'Sin asignar').toString().trim() || 'Sin asignar';
+    counts[v] = (counts[v] || 0) + 1;
+  });
+
+  const labels = Object.keys(counts);
+  const data = Object.values(counts);
+  const colors = labels.map(l => {
+    const ll = l.toLowerCase();
+    if (ll.includes('codefy')) return '#6366f1';
+    if (ll.includes('fideliza')) return '#10b981';
+    return '#94a3b8';
+  });
+
+  if (charts.project) charts.project.destroy();
+  const ctx = document.getElementById('projectChart').getContext('2d');
+  charts.project = new Chart(ctx, {
+    type: 'doughnut',
+    data: { labels, datasets: [{ data, backgroundColor: colors, borderColor: '#131825', borderWidth: 2 }] },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      cutout: '65%',
+      plugins: {
+        legend: { position: 'bottom', labels: { color: '#e8ecf4', padding: 12, font: { size: 12 } } }
+      }
+    }
+  });
+}
+
+function renderChannelChart() {
+  const sample = filteredData[0] || allData[0] || {};
+  const channelCol = findCol(sample, ['canal', 'channel', 'medio', 'fuente']);
+  if (!channelCol) {
+    if (charts.channel) charts.channel.destroy();
+    document.getElementById('channelChart').parentElement.innerHTML =
+      '<div class="empty-state" style="padding: 40px;">No hay columna de canal en el Sheet</div>';
+    return;
+  }
+
+  const counts = {};
+  filteredData.forEach(r => {
+    const v = (r[channelCol] || 'Sin asignar').toString().trim() || 'Sin asignar';
+    counts[v] = (counts[v] || 0) + 1;
+  });
+
+  const sorted = Object.entries(counts).sort((a,b) => b[1] - a[1]);
+  const labels = sorted.map(e => e[0]);
+  const data = sorted.map(e => e[1]);
+
+  if (charts.channel) charts.channel.destroy();
+  const ctx = document.getElementById('channelChart').getContext('2d');
+  charts.channel = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{
+        data,
+        backgroundColor: ['#6366f1', '#8b5cf6', '#ec4899', '#f59e0b', '#10b981', '#3b82f6'].slice(0, labels.length),
+        borderRadius: 6
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      indexAxis: 'y',
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { ticks: { color: '#8892a8' }, grid: { color: '#232a3d' } },
+        y: { ticks: { color: '#e8ecf4' }, grid: { display: false } }
+      }
+    }
+  });
+}
+
+function renderFollowups() {
+  const sample = filteredData[0] || allData[0] || {};
+  const fuCol = findCol(sample, ['fecha seguimiento', 'fecha proximo seguimiento', 'proximo seguimiento', 'siguiente paso fecha', 'fecha siguiente']);
+  const empCol = findCol(sample, ['empresa', 'company', 'cuenta']);
+  const persCol = findCol(sample, ['persona', 'contacto', 'nombre', 'lead']);
+
+  if (!fuCol) {
+    document.getElementById('followupsList').innerHTML =
+      '<div class="empty-state" style="padding: 20px;">No hay columna de fecha de seguimiento</div>';
+    return;
+  }
+
+  const items = filteredData.map(r => {
+    const date = parseDate(r[fuCol]);
+    if (!date) return null;
+    const days = daysFromNow(date);
+    if (days === null || days > 7) return null;
+    return {
+      empresa: r[empCol] || '—',
+      persona: r[persCol] || '',
+      date,
+      days
+    };
+  }).filter(Boolean).sort((a,b) => a.date - b.date);
+
+  if (items.length === 0) {
+    document.getElementById('followupsList').innerHTML =
+      '<div class="empty-state" style="padding: 20px;">Sin seguimientos en los próximos 7 días</div>';
+    return;
+  }
+
+  document.getElementById('followupsList').innerHTML = items.slice(0, 15).map(i => {
+    let cls = 'followup-soon', label = '';
+    if (i.days < 0) { cls = 'followup-overdue'; label = `Atrasado ${Math.abs(i.days)}d`; }
+    else if (i.days === 0) { cls = 'followup-today'; label = 'Hoy'; }
+    else if (i.days === 1) { label = 'Mañana'; }
+    else { label = `En ${i.days}d`; }
+
+    return `
+      <div class="followup-row ${cls}">
+        <div>
+          <div style="font-weight: 500;">${i.empresa}</div>
+          <div style="font-size: 11px; color: var(--text-muted);">${i.persona}</div>
+        </div>
+        <div style="font-size: 12px;">${label}</div>
+      </div>
+    `;
+  }).join('');
+}
+
+function populateFilters() {
+  const sample = filteredData[0] || allData[0] || {};
+  const statusCol = findCol(sample, ['estado', 'status', 'etapa']);
+  const channelCol = findCol(sample, ['canal', 'channel', 'medio']);
+
+  if (statusCol) {
+    const values = [...new Set(filteredData.map(r => r[statusCol]).filter(Boolean))];
+    const sel = document.getElementById('statusFilter');
+    const current = sel.value;
+    sel.innerHTML = '<option value="">Todos los estados</option>' +
+      values.map(v => `<option value="${v}">${v}</option>`).join('');
+    sel.value = current;
+  }
+
+  if (channelCol) {
+    const values = [...new Set(filteredData.map(r => r[channelCol]).filter(Boolean))];
+    const sel = document.getElementById('channelFilter');
+    const current = sel.value;
+    sel.innerHTML = '<option value="">Todos los canales</option>' +
+      values.map(v => `<option value="${v}">${v}</option>`).join('');
+    sel.value = current;
+  }
+}
+
+function renderTable() {
+  const sample = filteredData[0] || allData[0] || {};
+  if (!sample) return;
+
+  const search = document.getElementById('searchInput').value.toLowerCase();
+  const statusFilter = document.getElementById('statusFilter').value;
+  const channelFilter = document.getElementById('channelFilter').value;
+
+  const statusCol = findCol(sample, ['estado', 'status', 'etapa']);
+  const channelCol = findCol(sample, ['canal', 'channel', 'medio']);
+  const projectCol = findCol(sample, ['proyecto', 'project']);
+
+  let rows = filteredData.filter(r => {
+    if (search) {
+      const txt = Object.values(r).join(' ').toLowerCase();
+      if (!txt.includes(search)) return false;
+    }
+    if (statusFilter && r[statusCol] !== statusFilter) return false;
+    if (channelFilter && r[channelCol] !== channelFilter) return false;
+    return true;
+  });
+
+  if (sortState.col) {
+    rows.sort((a, b) => {
+      const va = (a[sortState.col] || '').toString().toLowerCase();
+      const vb = (b[sortState.col] || '').toString().toLowerCase();
+      if (va < vb) return sortState.asc ? -1 : 1;
+      if (va > vb) return sortState.asc ? 1 : -1;
+      return 0;
+    });
+  }
+
+  document.getElementById('tableCount').textContent = `${rows.length} de ${filteredData.length}`;
+
+  // Headers
+  const displayCols = columns.filter(c => c && c.trim());
+  document.getElementById('tableHead').innerHTML = displayCols.map(c => {
+    const isSorted = sortState.col === c;
+    const arrow = isSorted ? (sortState.asc ? ' ↑' : ' ↓') : '';
+    return `<th class="${isSorted ? 'sorted' : ''}" data-col="${c}">${c}${arrow}</th>`;
+  }).join('');
+
+  // Click to sort
+  document.querySelectorAll('#tableHead th').forEach(th => {
+    th.addEventListener('click', () => {
+      const col = th.dataset.col;
+      if (sortState.col === col) sortState.asc = !sortState.asc;
+      else { sortState.col = col; sortState.asc = true; }
+      renderTable();
+    });
+  });
+
+  // Body
+  if (rows.length === 0) {
+    document.getElementById('tableBody').innerHTML =
+      `<tr><td colspan="${displayCols.length}" style="text-align:center; padding: 40px; color: var(--text-muted);">Sin resultados</td></tr>`;
+    return;
+  }
+
+  document.getElementById('tableBody').innerHTML = rows.map(r => {
+    return '<tr>' + displayCols.map(c => {
+      let v = r[c] || '';
+      if (c === statusCol && v) {
+        v = `<span class="badge ${getStatusBadgeClass(v)}">${v}</span>`;
+      } else if (c === projectCol && v) {
+        const cls = v.toLowerCase().includes('codefy') ? 'badge-codefy' :
+                    v.toLowerCase().includes('fideliza') ? 'badge-fideliza' : 'badge-lead';
+        v = `<span class="badge ${cls}">${v}</span>`;
+      } else if (typeof v === 'string' && (v.startsWith('http://') || v.startsWith('https://'))) {
+        v = `<a href="${v}" target="_blank" style="color: var(--accent);">↗ Link</a>`;
+      }
+      return `<td>${v}</td>`;
+    }).join('') + '</tr>';
+  }).join('');
+}
+
+// ============================================
+// EVENTS
+// ============================================
+document.querySelectorAll('.filter-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    currentFilter = tab.dataset.filter;
+    applyFilter();
+  });
+});
+
+document.getElementById('searchInput').addEventListener('input', renderTable);
+document.getElementById('statusFilter').addEventListener('change', renderTable);
+document.getElementById('channelFilter').addEventListener('change', renderTable);
+
+// ============================================
+// INIT + AUTO REFRESH
+// ============================================
+loadData();
+setInterval(loadData, REFRESH_INTERVAL_MS);
+</script>
+</body>
+</html>
