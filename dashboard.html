@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Dashboard Comercial · Codefy + Fideliza</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -13,19 +12,20 @@
   --bg: #0a0e17;
   --bg-card: #131825;
   --bg-card-hover: #1a2030;
+  --bg-elevated: #1d2334;
   --border: #232a3d;
+  --border-light: #2d3548;
   --text: #e8ecf4;
   --text-dim: #8892a8;
   --text-muted: #5a6378;
   --accent: #6366f1;
   --accent-2: #8b5cf6;
   --green: #10b981;
+  --green-glow: rgba(16, 185, 129, 0.3);
   --yellow: #f59e0b;
   --red: #ef4444;
   --blue: #3b82f6;
   --pink: #ec4899;
-  --codefy: #6366f1;
-  --fideliza: #10b981;
 }
 
 body {
@@ -51,8 +51,8 @@ body {
 }
 
 .header h1 {
-  font-size: 26px;
-  font-weight: 600;
+  font-size: 28px;
+  font-weight: 700;
   letter-spacing: -0.02em;
   background: linear-gradient(135deg, #fff 0%, #c4b5fd 100%);
   -webkit-background-clip: text;
@@ -61,376 +61,369 @@ body {
 }
 
 .header p { color: var(--text-dim); font-size: 13px; margin-top: 4px; }
-
-.header-controls { display: flex; gap: 12px; align-items: center; }
+.header-controls { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
 
 .live-indicator {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 12px;
-  color: var(--text-dim);
+  display: flex; align-items: center; gap: 8px;
+  font-size: 12px; color: var(--text-dim);
   padding: 6px 12px;
   background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: 100px;
 }
 
-.live-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--green);
-  animation: pulse 2s ease-in-out infinite;
-}
+.live-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); animation: pulse 2s ease-in-out infinite; }
 
 @keyframes pulse {
-  0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.5); }
-  50% { opacity: 0.6; box-shadow: 0 0 0 8px rgba(16, 185, 129, 0); }
+  0%, 100% { opacity: 1; box-shadow: 0 0 0 0 var(--green-glow); }
+  50% { opacity: 0.7; box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); }
 }
 
 .btn {
   background: var(--bg-card);
   border: 1px solid var(--border);
   color: var(--text);
-  padding: 8px 16px;
-  border-radius: 8px;
-  cursor: pointer;
-  font-size: 13px;
-  font-weight: 500;
+  padding: 8px 16px; border-radius: 8px;
+  cursor: pointer; font-size: 13px; font-weight: 500;
   transition: all 0.2s;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
+  display: inline-flex; align-items: center; gap: 6px;
 }
 
-.btn:hover { background: var(--bg-card-hover); border-color: var(--accent); }
+.btn:hover { background: var(--bg-card-hover); border-color: var(--accent); transform: translateY(-1px); }
 
-.btn-primary { background: var(--accent); border-color: var(--accent); }
-.btn-primary:hover { background: var(--accent-2); border-color: var(--accent-2); }
-
-/* Filter tabs */
-.filter-tabs {
-  display: flex;
-  gap: 4px;
-  padding: 4px;
+.tabs {
+  display: flex; gap: 4px; padding: 4px;
   background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: 10px;
-  margin-bottom: 24px;
   width: fit-content;
 }
 
-.filter-tab {
+.tab {
   padding: 8px 18px;
-  background: transparent;
-  border: none;
+  background: transparent; border: none;
   color: var(--text-dim);
-  font-size: 13px;
-  font-weight: 500;
-  cursor: pointer;
-  border-radius: 6px;
+  font-size: 13px; font-weight: 500;
+  cursor: pointer; border-radius: 6px;
   transition: all 0.2s;
 }
 
-.filter-tab.active {
-  background: var(--accent);
-  color: white;
+.tab.active { background: var(--accent); color: white; box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4); }
+.tab:hover:not(.active) { color: var(--text); }
+
+.controls-row { display: flex; gap: 16px; margin-bottom: 24px; flex-wrap: wrap; align-items: center; }
+.control-label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px; font-weight: 600; }
+.control-group { display: flex; flex-direction: column; }
+
+.motivation-banner {
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.15), rgba(139, 92, 246, 0.1));
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  border-radius: 16px; padding: 20px 24px;
+  margin-bottom: 24px;
+  display: flex; align-items: center; justify-content: space-between; gap: 20px;
+  flex-wrap: wrap;
+  animation: slideDown 0.5s ease;
+  position: relative; overflow: hidden;
 }
 
-.filter-tab:hover:not(.active) { color: var(--text); }
+.motivation-banner::before {
+  content: ''; position: absolute;
+  top: -50%; right: -10%;
+  width: 300px; height: 300px;
+  background: radial-gradient(circle, rgba(139, 92, 246, 0.2), transparent 70%);
+  filter: blur(40px);
+}
 
-/* KPI Cards */
+.motivation-icon { font-size: 36px; flex-shrink: 0; z-index: 1; }
+.motivation-text { flex: 1; z-index: 1; }
+.motivation-title { font-size: 16px; font-weight: 700; margin-bottom: 4px; }
+.motivation-msg { font-size: 13px; color: var(--text-dim); line-height: 1.5; }
+.motivation-stat { z-index: 1; text-align: right; }
+.motivation-stat-value { font-size: 28px; font-weight: 800; color: var(--accent-2); }
+.motivation-stat-label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
+
+@keyframes slideDown { from { opacity: 0; transform: translateY(-12px); } to { opacity: 1; transform: translateY(0); } }
+
 .kpi-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 16px;
-  margin-bottom: 24px;
+  margin-bottom: 28px;
 }
 
 .kpi-card {
   background: var(--bg-card);
   border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 20px;
-  position: relative;
-  overflow: hidden;
-  transition: all 0.2s;
+  border-radius: 14px; padding: 20px;
+  position: relative; overflow: hidden;
+  transition: all 0.3s;
+  animation: fadeInUp 0.5s ease backwards;
 }
 
-.kpi-card:hover { transform: translateY(-2px); border-color: var(--accent); }
+.kpi-card:nth-child(1) { animation-delay: 0.05s; }
+.kpi-card:nth-child(2) { animation-delay: 0.1s; }
+.kpi-card:nth-child(3) { animation-delay: 0.15s; }
+.kpi-card:nth-child(4) { animation-delay: 0.2s; }
+.kpi-card:nth-child(5) { animation-delay: 0.25s; }
+
+@keyframes fadeInUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+
+.kpi-card:hover { transform: translateY(-3px); border-color: var(--accent); box-shadow: 0 12px 32px rgba(0, 0, 0, 0.3); }
 
 .kpi-card::before {
-  content: '';
-  position: absolute;
+  content: ''; position: absolute;
   top: 0; left: 0;
-  width: 40px; height: 40px;
+  width: 60px; height: 60px;
   background: var(--accent-color, var(--accent));
-  filter: blur(40px);
-  opacity: 0.3;
+  filter: blur(40px); opacity: 0.3;
 }
 
-.kpi-label {
-  font-size: 12px;
-  color: var(--text-dim);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  margin-bottom: 8px;
-  font-weight: 500;
+.kpi-icon { position: absolute; top: 18px; right: 18px; font-size: 22px; opacity: 0.6; }
+.kpi-label { font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 10px; font-weight: 600; }
+.kpi-value { font-size: 36px; font-weight: 800; letter-spacing: -0.03em; margin-bottom: 6px; line-height: 1; }
+
+.kpi-pct {
+  display: inline-block;
+  font-size: 13px; font-weight: 700;
+  padding: 2px 8px; border-radius: 6px;
+  background: rgba(99, 102, 241, 0.15);
+  color: #a5b4fc;
+  margin-left: 6px;
+}
+.kpi-pct.green { background: rgba(16, 185, 129, 0.15); color: #6ee7b7; }
+.kpi-pct.red { background: rgba(239, 68, 68, 0.15); color: #fca5a5; }
+.kpi-pct.yellow { background: rgba(245, 158, 11, 0.15); color: #fcd34d; }
+
+.kpi-sub { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+
+.section-title {
+  font-size: 16px; font-weight: 700;
+  margin-bottom: 14px; margin-top: 8px;
+  color: var(--text);
+  display: flex; align-items: center; gap: 10px;
+  letter-spacing: -0.01em;
 }
 
-.kpi-value {
-  font-size: 32px;
-  font-weight: 700;
-  letter-spacing: -0.02em;
-  margin-bottom: 4px;
+.section-title::before {
+  content: ''; width: 4px; height: 18px;
+  background: linear-gradient(180deg, var(--accent), var(--accent-2));
+  border-radius: 100px;
 }
 
-.kpi-sub { font-size: 12px; color: var(--text-muted); }
-
-.kpi-icon {
-  position: absolute;
-  top: 18px;
-  right: 18px;
-  font-size: 20px;
-  opacity: 0.5;
-}
-
-/* Layout grid */
 .dashboard-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 16px;
-  margin-bottom: 24px;
+  gap: 16px; margin-bottom: 28px;
 }
 
-@media (max-width: 900px) {
-  .dashboard-grid { grid-template-columns: 1fr; }
-}
+@media (max-width: 900px) { .dashboard-grid { grid-template-columns: 1fr; } }
 
 .panel {
   background: var(--bg-card);
   border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 20px;
+  border-radius: 14px; padding: 22px;
+  animation: fadeInUp 0.5s ease backwards;
+  animation-delay: 0.3s;
 }
 
 .panel-title {
-  font-size: 14px;
-  font-weight: 600;
-  margin-bottom: 16px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+  font-size: 14px; font-weight: 700;
+  margin-bottom: 18px;
+  display: flex; align-items: center; justify-content: space-between;
   color: var(--text);
 }
 
-.panel-title-sub { font-size: 11px; color: var(--text-muted); font-weight: 400; }
+.panel-title-sub { font-size: 11px; color: var(--text-muted); font-weight: 500; }
 
-.chart-container { position: relative; height: 240px; }
-
-/* Funnel */
-.funnel { display: flex; flex-direction: column; gap: 8px; }
+.funnel { display: flex; flex-direction: column; gap: 10px; }
 
 .funnel-stage {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 12px 16px;
-  background: linear-gradient(90deg, var(--stage-color, var(--accent)) var(--stage-pct, 0%), var(--bg-card-hover) var(--stage-pct, 0%));
-  border-radius: 8px;
-  border: 1px solid var(--border);
+  position: relative;
+  padding: 14px 18px;
+  background: var(--bg-elevated);
+  border-radius: 10px;
+  border: 1px solid var(--border-light);
+  overflow: hidden;
   transition: all 0.3s;
 }
 
-.funnel-stage:hover { transform: translateX(4px); }
+.funnel-stage:hover { transform: translateX(6px); border-color: var(--stage-color, var(--accent)); }
 
-.funnel-label { font-size: 13px; font-weight: 500; }
-.funnel-count { font-size: 18px; font-weight: 700; }
-.funnel-pct { font-size: 11px; color: var(--text-dim); margin-left: 8px; }
-
-/* Table */
-.table-panel { margin-bottom: 24px; }
-
-.table-controls {
-  display: flex;
-  gap: 12px;
-  margin-bottom: 16px;
-  flex-wrap: wrap;
+.funnel-stage-bar {
+  position: absolute; top: 0; left: 0; bottom: 0;
+  background: linear-gradient(90deg, var(--stage-bg-1), var(--stage-bg-2));
+  width: 0;
+  transition: width 1s cubic-bezier(0.34, 1.56, 0.64, 1);
+  z-index: 0;
 }
+
+.funnel-stage-content { position: relative; z-index: 1; display: flex; align-items: center; justify-content: space-between; }
+.funnel-label-wrap { display: flex; align-items: center; gap: 8px; }
+.funnel-emoji { font-size: 18px; }
+.funnel-label { font-size: 14px; font-weight: 600; }
+.funnel-pct { font-size: 11px; color: var(--text-dim); padding: 2px 8px; background: rgba(255,255,255,0.05); border-radius: 6px; }
+.funnel-count { font-size: 22px; font-weight: 800; }
+
+.conversion-list { display: flex; flex-direction: column; gap: 14px; }
+
+.conv-row {
+  background: var(--bg-elevated);
+  border-radius: 10px; padding: 14px 16px;
+  border: 1px solid var(--border-light);
+  transition: all 0.3s;
+}
+
+.conv-row:hover { border-color: var(--accent); transform: translateY(-2px); }
+
+.conv-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+.conv-name { font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+.conv-emoji { font-size: 18px; }
+.conv-stats { font-size: 12px; color: var(--text-dim); }
+.conv-stats strong { color: var(--text); font-weight: 700; }
+
+.conv-bar-wrap { height: 8px; background: var(--bg); border-radius: 100px; overflow: hidden; position: relative; }
+
+.conv-bar {
+  height: 100%;
+  background: linear-gradient(90deg, var(--bar-color, var(--accent)), var(--bar-color-2, var(--accent-2)));
+  border-radius: 100px;
+  width: 0;
+  transition: width 1.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.conv-pct { display: inline-block; margin-left: 8px; font-weight: 800; font-size: 13px; color: var(--bar-color, var(--accent)); }
+
+.feedback-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 14px; margin-bottom: 28px;
+}
+
+.feedback-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 14px; padding: 20px;
+  position: relative; overflow: hidden;
+  animation: fadeInUp 0.5s ease backwards;
+}
+
+.feedback-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: var(--accent);
+}
+
+.feedback-card.win::before { background: linear-gradient(90deg, var(--green), #34d399); }
+.feedback-card.warn::before { background: linear-gradient(90deg, var(--yellow), #fbbf24); }
+.feedback-card.action::before { background: linear-gradient(90deg, var(--accent), var(--accent-2)); }
+.feedback-card.coaching::before { background: linear-gradient(90deg, var(--pink), var(--accent-2)); }
+
+.feedback-header { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+.feedback-icon { font-size: 22px; }
+.feedback-title { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; }
+.feedback-card.win .feedback-title { color: #6ee7b7; }
+.feedback-card.warn .feedback-title { color: #fcd34d; }
+.feedback-card.action .feedback-title { color: #a5b4fc; }
+.feedback-card.coaching .feedback-title { color: #f9a8d4; }
+
+.feedback-list { list-style: none; padding: 0; }
+.feedback-list li {
+  font-size: 13px;
+  color: var(--text);
+  line-height: 1.6;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border);
+  display: flex; gap: 10px;
+}
+.feedback-list li:last-child { border-bottom: none; }
+.feedback-list li::before { content: '→'; color: var(--text-muted); flex-shrink: 0; }
+
+.table-controls { display: flex; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
 
 .search-input, .filter-select {
   background: var(--bg);
   border: 1px solid var(--border);
   color: var(--text);
-  padding: 8px 12px;
-  border-radius: 8px;
-  font-size: 13px;
-  outline: none;
+  padding: 9px 14px; border-radius: 8px;
+  font-size: 13px; outline: none;
   transition: border-color 0.2s;
 }
 
 .search-input { flex: 1; min-width: 200px; }
 .search-input:focus, .filter-select:focus { border-color: var(--accent); }
 
-.table-wrap {
-  overflow-x: auto;
-  border-radius: 8px;
-  border: 1px solid var(--border);
-  max-height: 600px;
-  overflow-y: auto;
-}
-
-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 13px;
-}
-
-thead {
-  position: sticky;
-  top: 0;
-  background: var(--bg-card-hover);
-  z-index: 10;
-}
+.table-wrap { overflow-x: auto; border-radius: 10px; border: 1px solid var(--border); max-height: 500px; overflow-y: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+thead { position: sticky; top: 0; background: var(--bg-elevated); z-index: 10; }
 
 th {
-  text-align: left;
-  padding: 12px;
-  font-weight: 600;
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+  text-align: left; padding: 12px;
+  font-weight: 700; font-size: 11px;
+  text-transform: uppercase; letter-spacing: 0.05em;
   color: var(--text-dim);
   border-bottom: 1px solid var(--border);
-  cursor: pointer;
-  user-select: none;
+  cursor: pointer; user-select: none;
   white-space: nowrap;
 }
 
 th:hover { color: var(--text); }
 th.sorted { color: var(--accent); }
-
-td {
-  padding: 12px;
-  border-bottom: 1px solid var(--border);
-  color: var(--text);
-}
-
+td { padding: 12px; border-bottom: 1px solid var(--border); color: var(--text); }
 tr:last-child td { border-bottom: none; }
 tr:hover td { background: rgba(99, 102, 241, 0.04); }
 
 .badge {
   display: inline-block;
-  padding: 3px 10px;
-  border-radius: 100px;
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.02em;
+  padding: 3px 10px; border-radius: 100px;
+  font-size: 11px; font-weight: 700; letter-spacing: 0.02em;
 }
 
 .badge-codefy { background: rgba(99, 102, 241, 0.15); color: #a5b4fc; }
 .badge-fideliza { background: rgba(16, 185, 129, 0.15); color: #6ee7b7; }
 .badge-lead { background: rgba(148, 163, 184, 0.15); color: #cbd5e1; }
 .badge-contactado { background: rgba(59, 130, 246, 0.15); color: #93c5fd; }
-.badge-conversacion { background: rgba(245, 158, 11, 0.15); color: #fcd34d; }
 .badge-cita { background: rgba(139, 92, 246, 0.15); color: #c4b5fd; }
-.badge-calificado { background: rgba(16, 185, 129, 0.15); color: #6ee7b7; }
+.badge-calificado { background: rgba(16, 185, 129, 0.2); color: #6ee7b7; }
 .badge-perdido { background: rgba(239, 68, 68, 0.15); color: #fca5a5; }
 
-/* Loading & error states */
-.loading-state, .error-state, .empty-state {
-  text-align: center;
-  padding: 60px 20px;
-  color: var(--text-dim);
-}
-
-.spinner {
-  width: 32px;
-  height: 32px;
-  border: 3px solid var(--border);
-  border-top-color: var(--accent);
-  border-radius: 50%;
-  animation: spin 0.8s linear infinite;
-  margin: 0 auto 16px;
-}
-
+.loading-state, .error-state, .empty-state { text-align: center; padding: 60px 20px; color: var(--text-dim); }
+.spinner { width: 36px; height: 36px; border: 3px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 16px; }
 @keyframes spin { to { transform: rotate(360deg); } }
-
 .error-state { color: var(--red); }
 .error-state .retry { margin-top: 12px; }
+.last-updated { font-size: 11px; color: var(--text-muted); margin-top: 8px; }
 
-.last-updated {
-  font-size: 11px;
-  color: var(--text-muted);
-  margin-top: 4px;
-}
-
-/* Goals section */
-.goals-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 12px;
-  margin-bottom: 24px;
-}
+.goals-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; margin-bottom: 28px; }
 
 .goal-card {
   background: var(--bg-card);
   border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 16px;
+  border-radius: 12px; padding: 18px;
+  transition: all 0.3s;
 }
 
-.goal-label { font-size: 11px; color: var(--text-dim); text-transform: uppercase; margin-bottom: 8px; }
-.goal-numbers { display: flex; align-items: baseline; gap: 6px; margin-bottom: 8px; }
-.goal-current { font-size: 22px; font-weight: 700; }
-.goal-target { font-size: 13px; color: var(--text-muted); }
+.goal-card:hover { border-color: var(--accent); transform: translateY(-2px); }
+.goal-label { font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 10px; font-weight: 600; }
+.goal-numbers { display: flex; align-items: baseline; gap: 6px; margin-bottom: 10px; }
+.goal-current { font-size: 26px; font-weight: 800; }
+.goal-target { font-size: 14px; color: var(--text-muted); }
+.goal-pct { margin-left: auto; font-size: 12px; font-weight: 700; padding: 2px 8px; border-radius: 6px; }
+.goal-pct.low { background: rgba(239, 68, 68, 0.15); color: #fca5a5; }
+.goal-pct.mid { background: rgba(245, 158, 11, 0.15); color: #fcd34d; }
+.goal-pct.high { background: rgba(16, 185, 129, 0.15); color: #6ee7b7; }
 
-.progress-bar {
-  height: 6px;
-  background: var(--bg);
-  border-radius: 100px;
-  overflow: hidden;
-}
-
-.progress-fill {
-  height: 100%;
-  background: linear-gradient(90deg, var(--accent), var(--accent-2));
-  border-radius: 100px;
-  transition: width 0.6s ease;
-}
-
-.section-title {
-  font-size: 16px;
-  font-weight: 600;
-  margin-bottom: 12px;
-  margin-top: 8px;
-  color: var(--text);
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.section-title::before {
-  content: '';
-  width: 4px;
-  height: 16px;
-  background: var(--accent);
-  border-radius: 100px;
-}
-
-/* Follow-ups alert */
-.followup-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
-.followup-row:last-child { border-bottom: none; }
-.followup-overdue { color: var(--red); }
-.followup-today { color: var(--yellow); }
-.followup-soon { color: var(--text); }
+.progress-bar { height: 8px; background: var(--bg); border-radius: 100px; overflow: hidden; }
+.progress-fill { height: 100%; border-radius: 100px; width: 0; transition: width 1.2s cubic-bezier(0.34, 1.56, 0.64, 1); }
+.progress-fill.low { background: linear-gradient(90deg, var(--red), #f87171); }
+.progress-fill.mid { background: linear-gradient(90deg, var(--yellow), #fbbf24); }
+.progress-fill.high { background: linear-gradient(90deg, var(--green), #34d399); }
 </style>
 </head>
 <body>
 <div class="container">
 
-  <!-- HEADER -->
   <div class="header">
     <div>
       <h1>Dashboard Comercial</h1>
@@ -439,42 +432,53 @@ tr:hover td { background: rgba(99, 102, 241, 0.04); }
     <div class="header-controls">
       <div class="live-indicator">
         <div class="live-dot"></div>
-        <span id="liveStatus">En vivo</span>
+        <span>En vivo</span>
       </div>
       <button class="btn" onclick="loadData()">↻ Actualizar</button>
     </div>
   </div>
 
-  <!-- FILTER TABS -->
-  <div class="filter-tabs">
-    <button class="filter-tab active" data-filter="all">Todos</button>
-    <button class="filter-tab" data-filter="Codefy">Codefy</button>
-    <button class="filter-tab" data-filter="Fideliza">Fideliza</button>
-  </div>
-
-  <!-- LOADING / ERROR / CONTENT -->
   <div id="loadingState" class="loading-state">
     <div class="spinner"></div>
     <div>Cargando datos del Sheet…</div>
   </div>
 
   <div id="errorState" class="error-state" style="display:none;">
-    <div style="font-size: 32px; margin-bottom: 8px;">⚠️</div>
+    <div style="font-size: 36px; margin-bottom: 10px;">⚠️</div>
     <div id="errorMessage">No se pudo cargar el Sheet.</div>
     <button class="btn retry" onclick="loadData()">Reintentar</button>
   </div>
 
   <div id="dashboardContent" style="display: none;">
 
-    <!-- KPIs PRINCIPALES -->
-    <div class="section-title">Resumen general</div>
+    <div class="controls-row">
+      <div class="control-group">
+        <div class="control-label">Período</div>
+        <div class="tabs" id="periodTabs">
+          <button class="tab" data-period="hoy">Hoy</button>
+          <button class="tab active" data-period="semana">Esta semana</button>
+          <button class="tab" data-period="mes">Este mes</button>
+          <button class="tab" data-period="all">Todo</button>
+        </div>
+      </div>
+      <div class="control-group">
+        <div class="control-label">Producto</div>
+        <div class="tabs" id="productTabs">
+          <button class="tab active" data-product="all">Todos</button>
+          <button class="tab" data-product="Codefy">Codefy</button>
+          <button class="tab" data-product="Fideliza">Fideliza</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="motivation-banner" id="motivationBanner"></div>
+
+    <div class="section-title">Resumen del período</div>
     <div class="kpi-grid" id="kpiGrid"></div>
 
-    <!-- METAS -->
-    <div class="section-title">Metas vs realidad</div>
+    <div class="section-title">Metas</div>
     <div class="goals-grid" id="goalsGrid"></div>
 
-    <!-- CHARTS GRID -->
     <div class="dashboard-grid">
 
       <div class="panel">
@@ -487,20 +491,18 @@ tr:hover td { background: rgba(99, 102, 241, 0.04); }
 
       <div class="panel">
         <div class="panel-title">
-          <span>Distribución por proyecto</span>
+          <span>Conversión por canal</span>
+          <span class="panel-title-sub">% que pasa a reunión</span>
         </div>
-        <div class="chart-container">
-          <canvas id="projectChart"></canvas>
-        </div>
+        <div class="conversion-list" id="channelConv"></div>
       </div>
 
       <div class="panel">
         <div class="panel-title">
-          <span>Canal de prospección</span>
+          <span>Conversión por producto</span>
+          <span class="panel-title-sub">% que cierra (me pagan)</span>
         </div>
-        <div class="chart-container">
-          <canvas id="channelChart"></canvas>
-        </div>
+        <div class="conversion-list" id="productConv"></div>
       </div>
 
       <div class="panel">
@@ -508,25 +510,23 @@ tr:hover td { background: rgba(99, 102, 241, 0.04); }
           <span>Próximos seguimientos</span>
           <span class="panel-title-sub">7 días</span>
         </div>
-        <div id="followupsList" style="max-height: 240px; overflow-y: auto;"></div>
+        <div id="followupsList" style="max-height: 280px; overflow-y: auto;"></div>
       </div>
 
     </div>
 
-    <!-- TABLE -->
-    <div class="panel table-panel">
+    <div class="section-title">📋 Feedback para tu 1:1 del viernes</div>
+    <div class="feedback-grid" id="feedbackGrid"></div>
+
+    <div class="panel">
       <div class="panel-title">
         <span>Base de leads</span>
         <span class="panel-title-sub" id="tableCount"></span>
       </div>
       <div class="table-controls">
-        <input type="text" class="search-input" id="searchInput" placeholder="Buscar por empresa, persona, cargo…">
-        <select class="filter-select" id="statusFilter">
-          <option value="">Todos los estados</option>
-        </select>
-        <select class="filter-select" id="channelFilter">
-          <option value="">Todos los canales</option>
-        </select>
+        <input type="text" class="search-input" id="searchInput" placeholder="Buscar empresa, persona, cargo…">
+        <select class="filter-select" id="statusFilter"><option value="">Todos los status</option></select>
+        <select class="filter-select" id="channelFilter"><option value="">Todos los canales</option></select>
       </div>
       <div class="table-wrap">
         <table id="dataTable">
@@ -542,33 +542,26 @@ tr:hover td { background: rgba(99, 102, 241, 0.04); }
 </div>
 
 <script>
-// ============================================
-// CONFIG
-// ============================================
 const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRT1czGk5oSXvz8m0R6vu7tg0W-BAQ6lvBHcy3AkhumpWquwpjbOKqKOKMQL0tZQ2QTPnOPOlBUQ7Wl/pub?output=csv';
-const REFRESH_INTERVAL_MS = 60000; // refresca cada 60s
+const REFRESH_INTERVAL_MS = 60000;
 
-// Metas SDR (ajustables)
 const GOALS = {
   toquesDiarios: 50,
   toquesSemanales: 250,
-  citasSemanales: 10,
-  citasCalificadasSemanales: 8
+  toquesMensuales: 1100,
+  reunionesSemanales: 10,
+  reunionesMensuales: 40,
+  cierresSemanales: 2,
+  cierresMensuales: 8
 };
 
-// ============================================
-// STATE
-// ============================================
 let allData = [];
-let filteredData = [];
-let currentFilter = 'all';
+let dataInPeriod = [];
 let columns = [];
-let charts = {};
+let currentPeriod = 'semana';
+let currentProduct = 'all';
 let sortState = { col: null, asc: true };
 
-// ============================================
-// HELPERS
-// ============================================
 function normalizeKey(k) {
   return (k || '').toString().toLowerCase().trim()
     .replace(/[áàä]/g, 'a').replace(/[éèë]/g, 'e').replace(/[íìï]/g, 'i')
@@ -577,13 +570,13 @@ function normalizeKey(k) {
 }
 
 function findCol(row, candidates) {
+  if (!row) return null;
   const keys = Object.keys(row);
   for (const cand of candidates) {
     const normCand = normalizeKey(cand);
     const match = keys.find(k => normalizeKey(k) === normCand);
     if (match) return match;
   }
-  // Match parcial
   for (const cand of candidates) {
     const normCand = normalizeKey(cand);
     const match = keys.find(k => normalizeKey(k).includes(normCand));
@@ -592,25 +585,12 @@ function findCol(row, candidates) {
   return null;
 }
 
-function getStatusBadgeClass(status) {
-  const s = normalizeKey(status);
-  if (s.includes('lead')) return 'badge-lead';
-  if (s.includes('contact')) return 'badge-contactado';
-  if (s.includes('reuni') || s.includes('cita') || s.includes('agenda') || s.includes('conversa')) return 'badge-cita';
-  if (s.includes('pagan') || s.includes('cerrad') || s.includes('calific')) return 'badge-calificado';
-  if (s.includes('muert') || s.includes('perdid') || s.includes('descart')) return 'badge-perdido';
-  if (s.includes('cita') || s.includes('agenda')) return 'badge-cita';
-  if (s.includes('perdid') || s.includes('descart') || s.includes('cerrad')) return 'badge-perdido';
-  return 'badge-lead';
-}
-
 function parseDate(str) {
   if (!str) return null;
   const s = str.toString().trim();
-  // Intenta ISO
+  if (!s) return null;
   let d = new Date(s);
-  if (!isNaN(d.getTime())) return d;
-  // Intenta DD/MM/YYYY o DD-MM-YYYY
+  if (!isNaN(d.getTime()) && d.getFullYear() > 2000 && d.getFullYear() < 2100) return d;
   const m = s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})$/);
   if (m) {
     let year = parseInt(m[3]);
@@ -623,38 +603,54 @@ function parseDate(str) {
 
 function daysFromNow(date) {
   if (!date) return null;
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const target = new Date(date);
-  target.setHours(0, 0, 0, 0);
-  return Math.round((target - today) / (1000 * 60 * 60 * 24));
+  const today = new Date(); today.setHours(0,0,0,0);
+  const target = new Date(date); target.setHours(0,0,0,0);
+  return Math.round((target - today) / (1000*60*60*24));
 }
 
-// ============================================
-// DATA LOADING
-// ============================================
+function getStatusBadgeClass(status) {
+  const s = normalizeKey(status);
+  if (s.includes('lead')) return 'badge-lead';
+  if (s.includes('contact')) return 'badge-contactado';
+  if (s.includes('reuni') || s.includes('cita') || s.includes('agenda')) return 'badge-cita';
+  if (s.includes('pagan') || s.includes('cerrad') || s.includes('calific')) return 'badge-calificado';
+  if (s.includes('muert') || s.includes('perdid')) return 'badge-perdido';
+  return 'badge-lead';
+}
+
+function classifyStatus(status) {
+  const s = (status || '').toString().toLowerCase();
+  if (s.includes('muert') || s.includes('perdid')) return 'muerte';
+  if (s.includes('pagan') || s.includes('cerrad') || s.includes('calific')) return 'pagan';
+  if (s.includes('reuni') || s.includes('cita') || s.includes('agenda')) return 'reunion';
+  if (s.includes('contact')) return 'contactado';
+  if (s.includes('lead')) return 'lead';
+  return 'lead';
+}
+
+function pct(num, den) {
+  if (!den || den === 0) return 0;
+  return Math.round((num / den) * 100);
+}
+
 async function loadData() {
   document.getElementById('loadingState').style.display = 'block';
   document.getElementById('errorState').style.display = 'none';
   document.getElementById('dashboardContent').style.display = 'none';
 
   try {
-    // Cache-busting para garantizar datos en vivo
-    const url = CSV_URL + '&t=' + Date.now();
+    const url = CSV_URL + (CSV_URL.includes('?') ? '&' : '?') + 't=' + Date.now();
     const response = await fetch(url);
     if (!response.ok) throw new Error('HTTP ' + response.status);
     const text = await response.text();
-
     const parsed = Papa.parse(text, { header: true, skipEmptyLines: true });
     allData = parsed.data.filter(r => Object.values(r).some(v => v && v.toString().trim()));
     columns = parsed.meta.fields || [];
-
     if (allData.length === 0) throw new Error('El Sheet está vacío.');
 
     document.getElementById('loadingState').style.display = 'none';
     document.getElementById('dashboardContent').style.display = 'block';
-
-    applyFilter();
+    applyFilters();
     document.getElementById('lastUpdated').textContent =
       'Última actualización: ' + new Date().toLocaleString('es-MX');
   } catch (err) {
@@ -665,331 +661,663 @@ async function loadData() {
   }
 }
 
-// ============================================
-// FILTERING & RENDERING
-// ============================================
-function applyFilter() {
+function applyFilters() {
   if (allData.length === 0) return;
+  const sample = allData[0];
+  const projectCol = findCol(sample, ['proyecto', 'project', 'producto']);
+  const dateCol = findCol(sample, ['fecha contacto', 'fecha primer contacto', 'fecha de contacto', 'fecha']);
 
-  const projectCol = findCol(allData[0], ['proyecto', 'project', 'producto']);
-
-  if (currentFilter === 'all' || !projectCol) {
-    filteredData = [...allData];
-  } else {
-    filteredData = allData.filter(r => {
-      const val = (r[projectCol] || '').toString().toLowerCase();
-      return val.includes(currentFilter.toLowerCase());
-    });
+  let data = [...allData];
+  if (currentProduct !== 'all' && projectCol) {
+    data = data.filter(r => (r[projectCol] || '').toString().toLowerCase().includes(currentProduct.toLowerCase()));
   }
 
+  const today = new Date(); today.setHours(0,0,0,0);
+  let cutoff = null;
+  if (currentPeriod === 'hoy') cutoff = today;
+  else if (currentPeriod === 'semana') {
+    cutoff = new Date(today);
+    const dayOfWeek = today.getDay() === 0 ? 6 : today.getDay() - 1;
+    cutoff.setDate(today.getDate() - dayOfWeek);
+  } else if (currentPeriod === 'mes') {
+    cutoff = new Date(today.getFullYear(), today.getMonth(), 1);
+  }
+
+  if (cutoff && dateCol) {
+    dataInPeriod = data.filter(r => {
+      const d = parseDate(r[dateCol]);
+      if (!d) return false;
+      d.setHours(0,0,0,0);
+      return d >= cutoff;
+    });
+  } else {
+    dataInPeriod = data;
+  }
+
+  renderAll();
+}
+
+function renderAll() {
+  renderMotivationBanner();
   renderKPIs();
   renderGoals();
   renderFunnel();
-  renderProjectChart();
-  renderChannelChart();
+  renderChannelConversion();
+  renderProductConversion();
   renderFollowups();
+  renderFeedback();
   renderTable();
   populateFilters();
 }
 
+function renderMotivationBanner() {
+  const sample = dataInPeriod[0] || allData[0] || {};
+  const statusCol = findCol(sample, ['status', 'etapa']);
+
+  let pagan = 0, reuniones = 0, contactados = 0;
+  dataInPeriod.forEach(r => {
+    const cls = classifyStatus(r[statusCol]);
+    if (cls === 'pagan') pagan++;
+    if (cls === 'reunion' || cls === 'pagan') reuniones++;
+    if (cls !== 'lead') contactados++;
+  });
+
+  const total = dataInPeriod.length;
+  const periodName = { hoy: 'hoy', semana: 'esta semana', mes: 'este mes', all: 'históricamente' }[currentPeriod];
+
+  let icon, title, msg, statValue, statLabel;
+
+  if (total === 0) {
+    icon = '🚀'; title = 'Listo para arrancar';
+    msg = 'Aún no hay actividad registrada en este período. Es momento de prospectar.';
+    statValue = '0'; statLabel = 'Toques';
+  } else if (pagan >= 3) {
+    icon = '🔥'; title = '¡Está fuego!';
+    msg = `${pagan} cierres ${periodName}. Esto es lo que se llama estar en racha. Mantén el ritmo.`;
+    statValue = pagan; statLabel = 'Cierres';
+  } else if (pagan >= 1) {
+    icon = '💰'; title = '¡Hay billetes!';
+    msg = `${pagan} cierre${pagan > 1 ? 's' : ''} ${periodName}. Cada uno cuenta. Vamos por más.`;
+    statValue = pagan; statLabel = pagan > 1 ? 'Cierres' : 'Cierre';
+  } else if (reuniones >= 5) {
+    icon = '🎯'; title = 'Pipeline sólido';
+    msg = `${reuniones} reuniones ${periodName}. La fábrica de citas está funcionando, ahora a convertirlas.`;
+    statValue = reuniones; statLabel = 'Reuniones';
+  } else if (reuniones >= 1) {
+    icon = '📈'; title = 'Construyendo pipeline';
+    msg = `${reuniones} reunión${reuniones > 1 ? 'es' : ''} ${periodName}. Cada reunión es una oportunidad real.`;
+    statValue = reuniones; statLabel = reuniones > 1 ? 'Reuniones' : 'Reunión';
+  } else if (contactados >= 20) {
+    icon = '⚡'; title = 'Volumen alto';
+    msg = `${contactados} contactos ${periodName}. Ahora hay que mejorar la conversión a reunión.`;
+    statValue = contactados; statLabel = 'Contactados';
+  } else if (contactados >= 1) {
+    icon = '💪'; title = 'A meterle volumen';
+    msg = `${contactados} contactos ${periodName}. Necesitamos más toques para que el embudo dé frutos.`;
+    statValue = contactados; statLabel = 'Contactados';
+  } else {
+    icon = '⏰'; title = 'Sin actividad';
+    msg = `Sin contactos registrados ${periodName}. Es momento de salir a tocar.`;
+    statValue = '0'; statLabel = 'Toques';
+  }
+
+  document.getElementById('motivationBanner').innerHTML = `
+    <div class="motivation-icon">${icon}</div>
+    <div class="motivation-text">
+      <div class="motivation-title">${title}</div>
+      <div class="motivation-msg">${msg}</div>
+    </div>
+    <div class="motivation-stat">
+      <div class="motivation-stat-value">${statValue}</div>
+      <div class="motivation-stat-label">${statLabel}</div>
+    </div>
+  `;
+}
+
 function renderKPIs() {
-  const total = filteredData.length;
-  const sample = filteredData[0] || allData[0] || {};
+  const sample = dataInPeriod[0] || allData[0] || {};
+  const statusCol = findCol(sample, ['status', 'etapa']);
+  const projectCol = findCol(sample, ['proyecto', 'project']);
 
-  const statusCol = findCol(sample, ['status', 'etapa', 'stage']);
-  const projectCol = findCol(sample, ['proyecto', 'project', 'producto']);
+  let total = dataInPeriod.length;
+  let contactados = 0, reuniones = 0, pagan = 0, muerte = 0;
+  let codefyCount = 0, fidelizaCount = 0;
 
-  let reuniones = 0, mePagan = 0, contactados = 0, muertos = 0, codefyCount = 0, fidelizaCount = 0;
-
-  filteredData.forEach(r => {
-    const status = (r[statusCol] || '').toString().toLowerCase();
-    if (status.includes('reuni') || status.includes('cita') || status.includes('agenda') || status.includes('conversa')) reuniones++;
-    if (status.includes('pagan') || status.includes('cerrad')) mePagan++;
-    if (status.includes('muert') || status.includes('perdid')) muertos++;
-    // Contactado = todos los que ya pasaron de lead (incluye contactado, reunion, me pagan)
-    if (status.includes('contact') || status.includes('reuni') || status.includes('cita') || status.includes('agenda') || status.includes('conversa') || status.includes('pagan') || status.includes('cerrad')) contactados++;
-
+  dataInPeriod.forEach(r => {
+    const cls = classifyStatus(r[statusCol]);
+    if (cls === 'contactado' || cls === 'reunion' || cls === 'pagan') contactados++;
+    if (cls === 'reunion' || cls === 'pagan') reuniones++;
+    if (cls === 'pagan') pagan++;
+    if (cls === 'muerte') muerte++;
     const proj = (r[projectCol] || '').toString().toLowerCase();
     if (proj.includes('codefy')) codefyCount++;
     if (proj.includes('fideliza')) fidelizaCount++;
   });
 
-  const tasaContacto = total > 0 ? Math.round((contactados / total) * 100) : 0;
-  const totalActivos = total - muertos; // leads no muertos
+  const tasaContacto = pct(contactados, total);
+  const tasaReunion = pct(reuniones, contactados);
+  const tasaCierre = pct(pagan, reuniones);
+  const tasaMuerte = pct(muerte, total);
+
+  const colorClass = (p) => p >= 50 ? 'green' : p >= 25 ? 'yellow' : 'red';
 
   const kpis = [
-    { label: 'Total leads', value: total, sub: `${codefyCount} Codefy · ${fidelizaCount} Fideliza`, color: 'var(--accent)', icon: '👥' },
-    { label: 'Contactados', value: contactados, sub: `${tasaContacto}% del total`, color: 'var(--blue)', icon: '✉️' },
-    { label: 'Reuniones', value: reuniones, sub: contactados > 0 ? `${Math.round((reuniones/contactados)*100)}% de contactados` : '—', color: 'var(--accent-2)', icon: '📅' },
-    { label: 'Me pagan 💰', value: mePagan, sub: reuniones > 0 ? `${Math.round((mePagan/reuniones)*100)}% de reuniones` : '—', color: 'var(--green)', icon: '🤑' }
+    { label: 'Total leads', value: total, pct: null, sub: `${codefyCount} Codefy · ${fidelizaCount} Fideliza`, color: 'var(--accent)', icon: '👥' },
+    { label: 'Contactados', value: contactados, pct: tasaContacto, pctClass: colorClass(tasaContacto), sub: 'del total de leads', color: 'var(--blue)', icon: '✉️' },
+    { label: 'Reuniones', value: reuniones, pct: tasaReunion, pctClass: colorClass(tasaReunion), sub: 'de contactados → reunión', color: 'var(--accent-2)', icon: '📅' },
+    { label: 'Me pagan', value: pagan, pct: tasaCierre, pctClass: colorClass(tasaCierre), sub: 'de reuniones → cierre', color: 'var(--green)', icon: '💰' },
+    { label: 'Muertes', value: muerte, pct: tasaMuerte, pctClass: tasaMuerte > 30 ? 'red' : tasaMuerte > 15 ? 'yellow' : 'green', sub: 'leads descartados', color: 'var(--red)', icon: '💀' }
   ];
 
   document.getElementById('kpiGrid').innerHTML = kpis.map(k => `
     <div class="kpi-card" style="--accent-color: ${k.color}">
       <div class="kpi-icon">${k.icon}</div>
       <div class="kpi-label">${k.label}</div>
-      <div class="kpi-value">${k.value}</div>
+      <div class="kpi-value">
+        <span class="kpi-num" data-target="${k.value}">0</span>
+        ${k.pct !== null ? `<span class="kpi-pct ${k.pctClass}">${k.pct}%</span>` : ''}
+      </div>
       <div class="kpi-sub">${k.sub}</div>
     </div>
   `).join('');
+
+  animateNumbers();
+}
+
+function animateNumbers() {
+  document.querySelectorAll('.kpi-num').forEach(el => {
+    const target = parseInt(el.dataset.target) || 0;
+    const duration = 800;
+    const start = performance.now();
+    function step(now) {
+      const elapsed = now - start;
+      const progress = Math.min(elapsed / duration, 1);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      el.textContent = Math.round(target * eased);
+      if (progress < 1) requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+  });
 }
 
 function renderGoals() {
-  const sample = filteredData[0] || allData[0] || {};
+  const sample = dataInPeriod[0] || allData[0] || {};
   const statusCol = findCol(sample, ['status', 'etapa']);
-  const dateCol = findCol(sample, ['fecha contacto', 'fecha', 'fecha primer contacto', 'fecha seguimiento']);
 
-  // Esta semana
-  const today = new Date();
-  const weekStart = new Date(today);
-  weekStart.setDate(today.getDate() - today.getDay() + 1); // lunes
-  weekStart.setHours(0,0,0,0);
-
-  let toquesEstaSem = 0, reunionesEstaSem = 0, mePaganEstaSem = 0, toquesHoy = 0;
-
-  filteredData.forEach(r => {
-    const date = parseDate(r[dateCol]);
-    if (!date) return;
-    const status = (r[statusCol] || '').toString().toLowerCase();
-    if (date >= weekStart) {
-      toquesEstaSem++;
-      if (status.includes('reuni') || status.includes('cita') || status.includes('agenda') || status.includes('conversa')) reunionesEstaSem++;
-      if (status.includes('pagan') || status.includes('cerrad')) mePaganEstaSem++;
-    }
-    const todayStart = new Date(); todayStart.setHours(0,0,0,0);
-    if (date >= todayStart) toquesHoy++;
+  let toques = dataInPeriod.length;
+  let reuniones = 0, cierres = 0;
+  dataInPeriod.forEach(r => {
+    const cls = classifyStatus(r[statusCol]);
+    if (cls === 'reunion' || cls === 'pagan') reuniones++;
+    if (cls === 'pagan') cierres++;
   });
 
-  const goals = [
-    { label: 'Toques hoy', current: toquesHoy, target: GOALS.toquesDiarios },
-    { label: 'Toques esta semana', current: toquesEstaSem, target: GOALS.toquesSemanales },
-    { label: 'Reuniones esta semana', current: reunionesEstaSem, target: GOALS.citasSemanales },
-    { label: 'Cierres esta semana 💰', current: mePaganEstaSem, target: GOALS.citasCalificadasSemanales }
+  let toquesGoal, reunionesGoal, cierresGoal, periodLabel;
+  if (currentPeriod === 'hoy') {
+    toquesGoal = GOALS.toquesDiarios;
+    reunionesGoal = Math.round(GOALS.reunionesSemanales / 5);
+    cierresGoal = 1;
+    periodLabel = 'hoy';
+  } else if (currentPeriod === 'semana') {
+    toquesGoal = GOALS.toquesSemanales;
+    reunionesGoal = GOALS.reunionesSemanales;
+    cierresGoal = GOALS.cierresSemanales;
+    periodLabel = 'esta semana';
+  } else if (currentPeriod === 'mes') {
+    toquesGoal = GOALS.toquesMensuales;
+    reunionesGoal = GOALS.reunionesMensuales;
+    cierresGoal = GOALS.cierresMensuales;
+    periodLabel = 'este mes';
+  } else {
+    toquesGoal = null;
+    periodLabel = 'histórico';
+  }
+
+  const items = [
+    { label: `Toques ${periodLabel}`, current: toques, target: toquesGoal },
+    { label: `Reuniones ${periodLabel}`, current: reuniones, target: reunionesGoal },
+    { label: `Cierres 💰 ${periodLabel}`, current: cierres, target: cierresGoal }
   ];
 
-  document.getElementById('goalsGrid').innerHTML = goals.map(g => {
-    const pct = Math.min(100, Math.round((g.current / g.target) * 100));
+  document.getElementById('goalsGrid').innerHTML = items.map(g => {
+    if (!g.target) {
+      return `
+        <div class="goal-card">
+          <div class="goal-label">${g.label}</div>
+          <div class="goal-numbers"><span class="goal-current">${g.current}</span></div>
+          <div style="font-size: 11px; color: var(--text-muted);">acumulado</div>
+        </div>
+      `;
+    }
+    const p = Math.min(100, Math.round((g.current / g.target) * 100));
+    const cls = p >= 80 ? 'high' : p >= 40 ? 'mid' : 'low';
     return `
       <div class="goal-card">
         <div class="goal-label">${g.label}</div>
         <div class="goal-numbers">
           <span class="goal-current">${g.current}</span>
           <span class="goal-target">/ ${g.target}</span>
+          <span class="goal-pct ${cls}">${p}%</span>
         </div>
-        <div class="progress-bar"><div class="progress-fill" style="width: ${pct}%"></div></div>
+        <div class="progress-bar"><div class="progress-fill ${cls}" data-pct="${p}" style="width: 0"></div></div>
       </div>
     `;
   }).join('');
+
+  setTimeout(() => {
+    document.querySelectorAll('.progress-fill').forEach(bar => {
+      if (bar.dataset.pct) bar.style.width = bar.dataset.pct + '%';
+    });
+  }, 100);
 }
 
 function renderFunnel() {
-  const sample = filteredData[0] || allData[0] || {};
+  const sample = dataInPeriod[0] || allData[0] || {};
   const statusCol = findCol(sample, ['status', 'etapa']);
 
   const stages = [
-    { label: 'Lead', match: s => s.trim() === 'lead' || (s && !s.includes('contact') && !s.includes('reuni') && !s.includes('pagan') && !s.includes('muert') && !s.includes('cita') && !s.includes('agenda') && !s.includes('conversa') && !s.includes('calific') && !s.includes('perdid')), color: '#94a3b8' },
-    { label: 'Contactado', match: s => s.includes('contact'), color: '#3b82f6' },
-    { label: 'Reunión', match: s => s.includes('reuni') || s.includes('cita') || s.includes('agenda') || s.includes('conversa'), color: '#8b5cf6' },
-    { label: 'Me pagan 💰', match: s => s.includes('pagan') || s.includes('cerrad') || s.includes('calific'), color: '#10b981' },
-    { label: 'Muerte 💀', match: s => s.includes('muert') || s.includes('perdid') || s.includes('descart'), color: '#ef4444' }
+    { label: 'Lead', emoji: '🌱', cls: 'lead', color: '#94a3b8', bg1: 'rgba(148,163,184,0.4)', bg2: 'rgba(148,163,184,0.15)' },
+    { label: 'Contactado', emoji: '✉️', cls: 'contactado', color: '#3b82f6', bg1: 'rgba(59,130,246,0.4)', bg2: 'rgba(59,130,246,0.15)' },
+    { label: 'Reunión', emoji: '📅', cls: 'reunion', color: '#8b5cf6', bg1: 'rgba(139,92,246,0.4)', bg2: 'rgba(139,92,246,0.15)' },
+    { label: 'Me pagan', emoji: '💰', cls: 'pagan', color: '#10b981', bg1: 'rgba(16,185,129,0.4)', bg2: 'rgba(16,185,129,0.15)' },
+    { label: 'Muerte', emoji: '💀', cls: 'muerte', color: '#ef4444', bg1: 'rgba(239,68,68,0.4)', bg2: 'rgba(239,68,68,0.15)' }
   ];
 
-  const counts = stages.map(stage => {
-    return filteredData.filter(r => stage.match((r[statusCol] || '').toString().toLowerCase())).length;
-  });
+  const counts = stages.map(s =>
+    dataInPeriod.filter(r => classifyStatus(r[statusCol]) === s.cls).length
+  );
 
   const max = Math.max(...counts, 1);
-  const total = filteredData.length;
+  const total = dataInPeriod.length;
 
   document.getElementById('funnelTotal').textContent = `${total} leads`;
   document.getElementById('funnel').innerHTML = stages.map((s, i) => {
     const count = counts[i];
-    const pct = max > 0 ? Math.round((count / max) * 100) : 0;
-    const totalPct = total > 0 ? Math.round((count / total) * 100) : 0;
+    const widthPct = Math.round((count / max) * 100);
+    const totalPct = pct(count, total);
     return `
-      <div class="funnel-stage" style="--stage-color: ${s.color}33; --stage-pct: ${pct}%">
-        <div>
-          <span class="funnel-label">${s.label}</span>
-          <span class="funnel-pct">${totalPct}%</span>
+      <div class="funnel-stage" style="--stage-color: ${s.color}; --stage-bg-1: ${s.bg1}; --stage-bg-2: ${s.bg2}">
+        <div class="funnel-stage-bar" data-pct="${widthPct}"></div>
+        <div class="funnel-stage-content">
+          <div class="funnel-label-wrap">
+            <span class="funnel-emoji">${s.emoji}</span>
+            <span class="funnel-label">${s.label}</span>
+            <span class="funnel-pct">${totalPct}%</span>
+          </div>
+          <span class="funnel-count">${count}</span>
         </div>
-        <span class="funnel-count">${count}</span>
       </div>
     `;
   }).join('');
+
+  setTimeout(() => {
+    document.querySelectorAll('.funnel-stage-bar').forEach(bar => {
+      bar.style.width = bar.dataset.pct + '%';
+    });
+  }, 50);
 }
 
-function renderProjectChart() {
-  const sample = filteredData[0] || allData[0] || {};
-  const projectCol = findCol(sample, ['proyecto', 'project', 'producto']);
-  if (!projectCol) return;
-
-  const counts = {};
-  filteredData.forEach(r => {
-    const v = (r[projectCol] || 'Sin asignar').toString().trim() || 'Sin asignar';
-    counts[v] = (counts[v] || 0) + 1;
-  });
-
-  const labels = Object.keys(counts);
-  const data = Object.values(counts);
-  const colors = labels.map(l => {
-    const ll = l.toLowerCase();
-    if (ll.includes('codefy')) return '#6366f1';
-    if (ll.includes('fideliza')) return '#10b981';
-    return '#94a3b8';
-  });
-
-  if (charts.project) charts.project.destroy();
-  const ctx = document.getElementById('projectChart').getContext('2d');
-  charts.project = new Chart(ctx, {
-    type: 'doughnut',
-    data: { labels, datasets: [{ data, backgroundColor: colors, borderColor: '#131825', borderWidth: 2 }] },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      cutout: '65%',
-      plugins: {
-        legend: { position: 'bottom', labels: { color: '#e8ecf4', padding: 12, font: { size: 12 } } }
-      }
-    }
-  });
-}
-
-function renderChannelChart() {
-  const sample = filteredData[0] || allData[0] || {};
+function renderChannelConversion() {
+  const sample = dataInPeriod[0] || allData[0] || {};
   const channelCol = findCol(sample, ['canal', 'channel', 'medio', 'fuente']);
+  const statusCol = findCol(sample, ['status', 'etapa']);
+
   if (!channelCol) {
-    if (charts.channel) charts.channel.destroy();
-    document.getElementById('channelChart').parentElement.innerHTML =
-      '<div class="empty-state" style="padding: 40px;">No hay columna de canal en el Sheet</div>';
+    document.getElementById('channelConv').innerHTML =
+      '<div class="empty-state" style="padding: 30px;">No hay columna de canal</div>';
     return;
   }
 
-  const counts = {};
-  filteredData.forEach(r => {
-    const v = (r[channelCol] || 'Sin asignar').toString().trim() || 'Sin asignar';
-    counts[v] = (counts[v] || 0) + 1;
+  const channels = {};
+  dataInPeriod.forEach(r => {
+    const c = (r[channelCol] || 'Sin canal').toString().trim() || 'Sin canal';
+    if (!channels[c]) channels[c] = { total: 0, contactados: 0, reuniones: 0, pagan: 0 };
+    channels[c].total++;
+    const cls = classifyStatus(r[statusCol]);
+    if (cls === 'contactado' || cls === 'reunion' || cls === 'pagan') channels[c].contactados++;
+    if (cls === 'reunion' || cls === 'pagan') channels[c].reuniones++;
+    if (cls === 'pagan') channels[c].pagan++;
   });
 
-  const sorted = Object.entries(counts).sort((a,b) => b[1] - a[1]);
-  const labels = sorted.map(e => e[0]);
-  const data = sorted.map(e => e[1]);
+  const channelEmoji = (name) => {
+    const n = name.toLowerCase();
+    if (n.includes('linkedin')) return '💼';
+    if (n.includes('mail') || n.includes('email')) return '✉️';
+    if (n.includes('whatsapp') || n.includes('wa')) return '💬';
+    if (n.includes('llamada') || n.includes('phone') || n.includes('tel')) return '📞';
+    return '📍';
+  };
 
-  if (charts.channel) charts.channel.destroy();
-  const ctx = document.getElementById('channelChart').getContext('2d');
-  charts.channel = new Chart(ctx, {
-    type: 'bar',
-    data: {
-      labels,
-      datasets: [{
-        data,
-        backgroundColor: ['#6366f1', '#8b5cf6', '#ec4899', '#f59e0b', '#10b981', '#3b82f6'].slice(0, labels.length),
-        borderRadius: 6
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      indexAxis: 'y',
-      plugins: { legend: { display: false } },
-      scales: {
-        x: { ticks: { color: '#8892a8' }, grid: { color: '#232a3d' } },
-        y: { ticks: { color: '#e8ecf4' }, grid: { display: false } }
-      }
-    }
+  const channelColor = (name) => {
+    const n = name.toLowerCase();
+    if (n.includes('linkedin')) return ['#0077b5', '#3b82f6'];
+    if (n.includes('mail') || n.includes('email')) return ['#ec4899', '#f472b6'];
+    if (n.includes('whatsapp')) return ['#25d366', '#10b981'];
+    if (n.includes('llamada')) return ['#f59e0b', '#fbbf24'];
+    return ['#6366f1', '#8b5cf6'];
+  };
+
+  const sorted = Object.entries(channels).sort((a, b) => b[1].total - a[1].total);
+
+  if (sorted.length === 0) {
+    document.getElementById('channelConv').innerHTML =
+      '<div class="empty-state" style="padding: 30px;">Sin datos en este período</div>';
+    return;
+  }
+
+  document.getElementById('channelConv').innerHTML = sorted.map(([name, d]) => {
+    const tasaReunion = pct(d.reuniones, d.total);
+    const [c1, c2] = channelColor(name);
+    return `
+      <div class="conv-row">
+        <div class="conv-header">
+          <div class="conv-name">
+            <span class="conv-emoji">${channelEmoji(name)}</span>
+            ${name}
+          </div>
+          <div class="conv-stats">
+            <strong>${d.total}</strong> toques · <strong>${d.reuniones}</strong> reuniones
+          </div>
+        </div>
+        <div class="conv-bar-wrap">
+          <div class="conv-bar" data-pct="${tasaReunion}" style="--bar-color: ${c1}; --bar-color-2: ${c2}"></div>
+        </div>
+        <div style="margin-top: 6px; font-size: 12px; color: var(--text-dim);">
+          Conversión a reunión: <span class="conv-pct" style="--bar-color: ${c1}">${tasaReunion}%</span>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  setTimeout(() => {
+    document.querySelectorAll('#channelConv .conv-bar').forEach(b => {
+      b.style.width = b.dataset.pct + '%';
+    });
+  }, 100);
+}
+
+function renderProductConversion() {
+  const sample = dataInPeriod[0] || allData[0] || {};
+  const projectCol = findCol(sample, ['proyecto', 'project', 'producto']);
+  const statusCol = findCol(sample, ['status', 'etapa']);
+
+  if (!projectCol) {
+    document.getElementById('productConv').innerHTML =
+      '<div class="empty-state" style="padding: 30px;">No hay columna de producto</div>';
+    return;
+  }
+
+  const products = {};
+  dataInPeriod.forEach(r => {
+    const p = (r[projectCol] || 'Sin asignar').toString().trim() || 'Sin asignar';
+    if (!products[p]) products[p] = { total: 0, reuniones: 0, pagan: 0 };
+    products[p].total++;
+    const cls = classifyStatus(r[statusCol]);
+    if (cls === 'reunion' || cls === 'pagan') products[p].reuniones++;
+    if (cls === 'pagan') products[p].pagan++;
   });
+
+  const productEmoji = (name) => {
+    const n = name.toLowerCase();
+    if (n.includes('codefy')) return '💻';
+    if (n.includes('fideliza')) return '🎁';
+    return '📦';
+  };
+
+  const productColor = (name) => {
+    const n = name.toLowerCase();
+    if (n.includes('codefy')) return ['#6366f1', '#a5b4fc'];
+    if (n.includes('fideliza')) return ['#10b981', '#6ee7b7'];
+    return ['#8b5cf6', '#c4b5fd'];
+  };
+
+  const sorted = Object.entries(products).sort((a,b) => b[1].total - a[1].total);
+
+  if (sorted.length === 0) {
+    document.getElementById('productConv').innerHTML =
+      '<div class="empty-state" style="padding: 30px;">Sin datos en este período</div>';
+    return;
+  }
+
+  document.getElementById('productConv').innerHTML = sorted.map(([name, d]) => {
+    const tasaCierre = pct(d.pagan, d.total);
+    const [c1, c2] = productColor(name);
+    return `
+      <div class="conv-row">
+        <div class="conv-header">
+          <div class="conv-name">
+            <span class="conv-emoji">${productEmoji(name)}</span>
+            ${name}
+          </div>
+          <div class="conv-stats">
+            <strong>${d.total}</strong> leads · <strong>${d.reuniones}</strong> reuniones · <strong>${d.pagan}</strong> 💰
+          </div>
+        </div>
+        <div class="conv-bar-wrap">
+          <div class="conv-bar" data-pct="${tasaCierre}" style="--bar-color: ${c1}; --bar-color-2: ${c2}"></div>
+        </div>
+        <div style="margin-top: 6px; font-size: 12px; color: var(--text-dim);">
+          Tasa de cierre: <span class="conv-pct" style="--bar-color: ${c1}">${tasaCierre}%</span>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  setTimeout(() => {
+    document.querySelectorAll('#productConv .conv-bar').forEach(b => {
+      b.style.width = b.dataset.pct + '%';
+    });
+  }, 100);
 }
 
 function renderFollowups() {
-  const sample = filteredData[0] || allData[0] || {};
-  const fuCol = findCol(sample, ['fecha seguimiento', 'fecha proximo seguimiento', 'proximo seguimiento', 'siguiente paso fecha', 'fecha siguiente']);
+  const sample = allData[0] || {};
+  const fuCol = findCol(sample, ['fecha seguimiento', 'fecha proximo seguimiento', 'proximo seguimiento', 'siguiente paso fecha']);
   const empCol = findCol(sample, ['empresa', 'company', 'cuenta']);
   const persCol = findCol(sample, ['persona', 'contacto', 'nombre', 'lead']);
 
   if (!fuCol) {
     document.getElementById('followupsList').innerHTML =
-      '<div class="empty-state" style="padding: 20px;">No hay columna de fecha de seguimiento</div>';
+      '<div class="empty-state" style="padding: 30px;">No hay columna de seguimiento</div>';
     return;
   }
 
-  const items = filteredData.map(r => {
+  const items = allData.map(r => {
     const date = parseDate(r[fuCol]);
     if (!date) return null;
     const days = daysFromNow(date);
     if (days === null || days > 7) return null;
-    return {
-      empresa: r[empCol] || '—',
-      persona: r[persCol] || '',
-      date,
-      days
-    };
+    return { empresa: r[empCol] || '—', persona: r[persCol] || '', date, days };
   }).filter(Boolean).sort((a,b) => a.date - b.date);
 
   if (items.length === 0) {
     document.getElementById('followupsList').innerHTML =
-      '<div class="empty-state" style="padding: 20px;">Sin seguimientos en los próximos 7 días</div>';
+      '<div class="empty-state" style="padding: 30px;">Sin seguimientos próximos 7 días</div>';
     return;
   }
 
-  document.getElementById('followupsList').innerHTML = items.slice(0, 15).map(i => {
-    let cls = 'followup-soon', label = '';
-    if (i.days < 0) { cls = 'followup-overdue'; label = `Atrasado ${Math.abs(i.days)}d`; }
-    else if (i.days === 0) { cls = 'followup-today'; label = 'Hoy'; }
-    else if (i.days === 1) { label = 'Mañana'; }
-    else { label = `En ${i.days}d`; }
+  document.getElementById('followupsList').innerHTML = items.slice(0, 12).map(i => {
+    let color, label;
+    if (i.days < 0) { color = 'var(--red)'; label = `Atrasado ${Math.abs(i.days)}d`; }
+    else if (i.days === 0) { color = 'var(--yellow)'; label = 'Hoy'; }
+    else if (i.days === 1) { color = 'var(--text)'; label = 'Mañana'; }
+    else { color = 'var(--text-dim)'; label = `En ${i.days}d`; }
 
     return `
-      <div class="followup-row ${cls}">
+      <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--border);">
         <div>
-          <div style="font-weight: 500;">${i.empresa}</div>
+          <div style="font-weight: 600; font-size: 13px;">${i.empresa}</div>
           <div style="font-size: 11px; color: var(--text-muted);">${i.persona}</div>
         </div>
-        <div style="font-size: 12px;">${label}</div>
+        <div style="font-size: 12px; color: ${color}; font-weight: 600;">${label}</div>
       </div>
     `;
   }).join('');
 }
 
-function populateFilters() {
-  const sample = filteredData[0] || allData[0] || {};
-  const statusCol = findCol(sample, ['status', 'etapa']);
-  const channelCol = findCol(sample, ['canal', 'channel', 'medio']);
-
-  if (statusCol) {
-    const values = [...new Set(filteredData.map(r => r[statusCol]).filter(Boolean))];
-    const sel = document.getElementById('statusFilter');
-    const current = sel.value;
-    sel.innerHTML = '<option value="">Todos los estados</option>' +
-      values.map(v => `<option value="${v}">${v}</option>`).join('');
-    sel.value = current;
-  }
-
-  if (channelCol) {
-    const values = [...new Set(filteredData.map(r => r[channelCol]).filter(Boolean))];
-    const sel = document.getElementById('channelFilter');
-    const current = sel.value;
-    sel.innerHTML = '<option value="">Todos los canales</option>' +
-      values.map(v => `<option value="${v}">${v}</option>`).join('');
-    sel.value = current;
-  }
-}
-
-function renderTable() {
-  const sample = filteredData[0] || allData[0] || {};
-  if (!sample) return;
-
-  const search = document.getElementById('searchInput').value.toLowerCase();
-  const statusFilter = document.getElementById('statusFilter').value;
-  const channelFilter = document.getElementById('channelFilter').value;
-
+function renderFeedback() {
+  const sample = dataInPeriod[0] || allData[0] || {};
   const statusCol = findCol(sample, ['status', 'etapa']);
   const channelCol = findCol(sample, ['canal', 'channel', 'medio']);
   const projectCol = findCol(sample, ['proyecto', 'project']);
 
-  let rows = filteredData.filter(r => {
-    if (search) {
-      const txt = Object.values(r).join(' ').toLowerCase();
-      if (!txt.includes(search)) return false;
+  let total = dataInPeriod.length;
+  let contactados = 0, reuniones = 0, pagan = 0, muerte = 0;
+  const channelStats = {};
+  const productStats = {};
+
+  dataInPeriod.forEach(r => {
+    const cls = classifyStatus(r[statusCol]);
+    if (cls === 'contactado' || cls === 'reunion' || cls === 'pagan') contactados++;
+    if (cls === 'reunion' || cls === 'pagan') reuniones++;
+    if (cls === 'pagan') pagan++;
+    if (cls === 'muerte') muerte++;
+
+    if (channelCol) {
+      const c = (r[channelCol] || 'sin').toString().trim() || 'sin';
+      if (!channelStats[c]) channelStats[c] = { total: 0, reuniones: 0 };
+      channelStats[c].total++;
+      if (cls === 'reunion' || cls === 'pagan') channelStats[c].reuniones++;
     }
+
+    if (projectCol) {
+      const p = (r[projectCol] || 'sin').toString().trim() || 'sin';
+      if (!productStats[p]) productStats[p] = { total: 0, reuniones: 0, pagan: 0 };
+      productStats[p].total++;
+      if (cls === 'reunion' || cls === 'pagan') productStats[p].reuniones++;
+      if (cls === 'pagan') productStats[p].pagan++;
+    }
+  });
+
+  const tasaReunion = pct(reuniones, contactados);
+  const tasaCierre = pct(pagan, reuniones);
+  const tasaMuerte = pct(muerte, total);
+
+  const wins = [];
+  if (pagan > 0) wins.push(`${pagan} cierre${pagan>1?'s':''} cerrado${pagan>1?'s':''}. Esto es lo que mueve el negocio. ${pagan>=3?'Está en racha 🔥':'Vamos por más.'}`);
+  if (tasaCierre >= 25 && reuniones >= 2) wins.push(`Tasa de cierre del ${tasaCierre}%. Las reuniones que agenda son de calidad real.`);
+  if (tasaReunion >= 25 && contactados >= 5) wins.push(`Convierte ${tasaReunion}% de contactos en reuniones. Por encima del benchmark típico (15-20%).`);
+  if (total >= 50) wins.push(`${total} leads tocados en el período. Volumen alto de actividad.`);
+
+  const bestChannel = Object.entries(channelStats)
+    .filter(([_, d]) => d.total >= 3)
+    .map(([n, d]) => ({ name: n, conv: pct(d.reuniones, d.total), total: d.total }))
+    .sort((a,b) => b.conv - a.conv)[0];
+  if (bestChannel && bestChannel.conv >= 15) {
+    wins.push(`${bestChannel.name} es el canal más eficiente con ${bestChannel.conv}% de conversión. Hay que doblar la apuesta ahí.`);
+  }
+
+  if (wins.length === 0) wins.push('Aún no hay wins significativos en este período. Revisa los datos para identificar progreso.');
+
+  const warnings = [];
+  if (tasaMuerte > 30 && total >= 10) warnings.push(`Tasa de muerte del ${tasaMuerte}%. Algo está fallando: o el ICP está mal definido o la prospección es de baja calidad.`);
+  if (contactados >= 10 && tasaReunion < 10) warnings.push(`Solo ${tasaReunion}% de contactados pasan a reunión. El copy o el pitch no está enganchando.`);
+  if (reuniones >= 5 && tasaCierre < 15) warnings.push(`${tasaCierre}% de cierre desde reunión. O las citas no son calificadas o el equipo de cierre no convierte. Revisar criterios de calidad.`);
+  if (currentPeriod === 'semana' && total < GOALS.toquesSemanales * 0.5) warnings.push(`Solo ${total} toques esta semana, muy debajo de la meta de ${GOALS.toquesSemanales}. El volumen es la base de todo.`);
+  if (currentPeriod === 'hoy' && total < GOALS.toquesDiarios * 0.5) warnings.push(`${total} toques hoy. A este ritmo no llega a los 50 diarios.`);
+
+  const worstChannel = Object.entries(channelStats)
+    .filter(([_, d]) => d.total >= 5)
+    .map(([n, d]) => ({ name: n, conv: pct(d.reuniones, d.total) }))
+    .sort((a,b) => a.conv - b.conv)[0];
+  if (worstChannel && bestChannel && worstChannel.name !== bestChannel.name && worstChannel.conv < 5) {
+    warnings.push(`${worstChannel.name} convierte solo ${worstChannel.conv}%. Si no mejora en 2 semanas, bajar volumen y subir a ${bestChannel.name}.`);
+  }
+
+  if (warnings.length === 0) warnings.push('Sin focos rojos en este período. Buena ejecución general.');
+
+  const actions = [];
+  if (tasaReunion < 15 && contactados >= 5) actions.push('Hacer un análisis de las respuestas: ¿qué objeciones aparecen? ¿qué hooks abren conversación?');
+  if (tasaCierre < 20 && reuniones >= 3) actions.push('Revisar las últimas 3 citas marcadas como "muerte" después de reunión. ¿Eran calificadas?');
+  if (bestChannel && worstChannel && bestChannel.name !== worstChannel.name && bestChannel.conv > worstChannel.conv * 2) actions.push(`Reasignar 30% del volumen de ${worstChannel.name} hacia ${bestChannel.name}.`);
+  if (currentPeriod === 'semana' && total < GOALS.toquesSemanales * 0.7) actions.push('Revisar bloqueos que están bajando el volumen de toques. ¿Falta data, falta tiempo, falta foco?');
+  if (pagan === 0 && currentPeriod !== 'hoy' && reuniones >= 1) actions.push('Sin cierres en el período. Revisar pipeline: ¿hay reuniones próximas a cerrar? ¿qué falta para empujarlas?');
+  if (productStats['Codefy'] && productStats['Fideliza']) {
+    const cConv = pct(productStats['Codefy'].pagan, productStats['Codefy'].total);
+    const fConv = pct(productStats['Fideliza'].pagan, productStats['Fideliza'].total);
+    if (Math.abs(cConv - fConv) >= 10) {
+      const winner = cConv > fConv ? 'Codefy' : 'Fideliza';
+      actions.push(`${winner} cierra ${Math.abs(cConv-fConv)}pp mejor. Considerar enfocar volumen donde hay mejor conversión.`);
+    }
+  }
+  if (actions.length === 0) actions.push('Mantener el ritmo. Documentar qué está funcionando para replicarlo.');
+
+  const coaching = [];
+  if (tasaReunion < 15 && contactados >= 5) coaching.push('🎯 Foco: copy de mensajes. Revisar juntos los últimos 10 mails y mejorar hooks.');
+  if (tasaMuerte > 25 && total >= 10) coaching.push('🎯 Foco: calificación de leads. Revisar el ICP juntos. ¿Está tocando los perfiles correctos?');
+  if (tasaCierre < 20 && reuniones >= 3) coaching.push('🎯 Foco: calidad de la cita. Definir criterios más estrictos de "cita calificada".');
+  if (total < GOALS.toquesSemanales * 0.5 && currentPeriod === 'semana') coaching.push('🎯 Foco: gestión del tiempo. ¿Qué consume horas que deberían ser de prospección?');
+  if (bestChannel) coaching.push(`💡 Reconocer: ${bestChannel.name} es su canal fuerte. Reforzar ese feedback positivo.`);
+  if (pagan >= 1) coaching.push('🏆 Celebrar el cierre. Pedirle que cuente cómo se cerró para extraer aprendizajes y replicarlos.');
+  if (coaching.length === 0) coaching.push('Sin foco específico esta semana. Aprovechar para preguntarle: ¿qué le está costando más?');
+
+  const renderList = (items) => items.map(i => `<li>${i}</li>`).join('');
+
+  document.getElementById('feedbackGrid').innerHTML = `
+    <div class="feedback-card win">
+      <div class="feedback-header">
+        <span class="feedback-icon">✅</span>
+        <span class="feedback-title">Lo que está funcionando</span>
+      </div>
+      <ul class="feedback-list">${renderList(wins)}</ul>
+    </div>
+    <div class="feedback-card warn">
+      <div class="feedback-header">
+        <span class="feedback-icon">⚠️</span>
+        <span class="feedback-title">Focos rojos</span>
+      </div>
+      <ul class="feedback-list">${renderList(warnings)}</ul>
+    </div>
+    <div class="feedback-card action">
+      <div class="feedback-header">
+        <span class="feedback-icon">🚀</span>
+        <span class="feedback-title">Próximas acciones</span>
+      </div>
+      <ul class="feedback-list">${renderList(actions)}</ul>
+    </div>
+    <div class="feedback-card coaching">
+      <div class="feedback-header">
+        <span class="feedback-icon">🎓</span>
+        <span class="feedback-title">Para tu 1:1 del viernes</span>
+      </div>
+      <ul class="feedback-list">${renderList(coaching)}</ul>
+    </div>
+  `;
+}
+
+function populateFilters() {
+  const sample = dataInPeriod[0] || allData[0] || {};
+  const statusCol = findCol(sample, ['status', 'etapa']);
+  const channelCol = findCol(sample, ['canal', 'channel', 'medio']);
+
+  if (statusCol) {
+    const values = [...new Set(allData.map(r => r[statusCol]).filter(Boolean))];
+    const sel = document.getElementById('statusFilter');
+    const cur = sel.value;
+    sel.innerHTML = '<option value="">Todos los status</option>' + values.map(v => `<option value="${v}">${v}</option>`).join('');
+    sel.value = cur;
+  }
+  if (channelCol) {
+    const values = [...new Set(allData.map(r => r[channelCol]).filter(Boolean))];
+    const sel = document.getElementById('channelFilter');
+    const cur = sel.value;
+    sel.innerHTML = '<option value="">Todos los canales</option>' + values.map(v => `<option value="${v}">${v}</option>`).join('');
+    sel.value = cur;
+  }
+}
+
+function renderTable() {
+  const sample = dataInPeriod[0] || allData[0] || {};
+  if (!sample) return;
+  const search = document.getElementById('searchInput').value.toLowerCase();
+  const statusFilter = document.getElementById('statusFilter').value;
+  const channelFilter = document.getElementById('channelFilter').value;
+  const statusCol = findCol(sample, ['status', 'etapa']);
+  const channelCol = findCol(sample, ['canal', 'channel', 'medio']);
+  const projectCol = findCol(sample, ['proyecto', 'project']);
+
+  let rows = dataInPeriod.filter(r => {
+    if (search && !Object.values(r).join(' ').toLowerCase().includes(search)) return false;
     if (statusFilter && r[statusCol] !== statusFilter) return false;
     if (channelFilter && r[channelCol] !== channelFilter) return false;
     return true;
@@ -1005,17 +1333,15 @@ function renderTable() {
     });
   }
 
-  document.getElementById('tableCount').textContent = `${rows.length} de ${filteredData.length}`;
+  document.getElementById('tableCount').textContent = `${rows.length} de ${dataInPeriod.length}`;
 
-  // Headers
   const displayCols = columns.filter(c => c && c.trim());
   document.getElementById('tableHead').innerHTML = displayCols.map(c => {
     const isSorted = sortState.col === c;
     const arrow = isSorted ? (sortState.asc ? ' ↑' : ' ↓') : '';
-    return `<th class="${isSorted ? 'sorted' : ''}" data-col="${c}">${c}${arrow}</th>`;
+    return `<th class="${isSorted?'sorted':''}" data-col="${c}">${c}${arrow}</th>`;
   }).join('');
 
-  // Click to sort
   document.querySelectorAll('#tableHead th').forEach(th => {
     th.addEventListener('click', () => {
       const col = th.dataset.col;
@@ -1025,21 +1351,18 @@ function renderTable() {
     });
   });
 
-  // Body
   if (rows.length === 0) {
     document.getElementById('tableBody').innerHTML =
-      `<tr><td colspan="${displayCols.length}" style="text-align:center; padding: 40px; color: var(--text-muted);">Sin resultados</td></tr>`;
+      `<tr><td colspan="${displayCols.length}" style="text-align:center; padding: 40px; color: var(--text-muted);">Sin resultados en este período</td></tr>`;
     return;
   }
 
   document.getElementById('tableBody').innerHTML = rows.map(r => {
     return '<tr>' + displayCols.map(c => {
       let v = r[c] || '';
-      if (c === statusCol && v) {
-        v = `<span class="badge ${getStatusBadgeClass(v)}">${v}</span>`;
-      } else if (c === projectCol && v) {
-        const cls = v.toLowerCase().includes('codefy') ? 'badge-codefy' :
-                    v.toLowerCase().includes('fideliza') ? 'badge-fideliza' : 'badge-lead';
+      if (c === statusCol && v) v = `<span class="badge ${getStatusBadgeClass(v)}">${v}</span>`;
+      else if (c === projectCol && v) {
+        const cls = v.toLowerCase().includes('codefy') ? 'badge-codefy' : v.toLowerCase().includes('fideliza') ? 'badge-fideliza' : 'badge-lead';
         v = `<span class="badge ${cls}">${v}</span>`;
       } else if (typeof v === 'string' && (v.startsWith('http://') || v.startsWith('https://'))) {
         v = `<a href="${v}" target="_blank" style="color: var(--accent);">↗ Link</a>`;
@@ -1049,15 +1372,21 @@ function renderTable() {
   }).join('');
 }
 
-// ============================================
-// EVENTS
-// ============================================
-document.querySelectorAll('.filter-tab').forEach(tab => {
+document.querySelectorAll('#periodTabs .tab').forEach(tab => {
   tab.addEventListener('click', () => {
-    document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('#periodTabs .tab').forEach(t => t.classList.remove('active'));
     tab.classList.add('active');
-    currentFilter = tab.dataset.filter;
-    applyFilter();
+    currentPeriod = tab.dataset.period;
+    applyFilters();
+  });
+});
+
+document.querySelectorAll('#productTabs .tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('#productTabs .tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    currentProduct = tab.dataset.product;
+    applyFilters();
   });
 });
 
@@ -1065,9 +1394,6 @@ document.getElementById('searchInput').addEventListener('input', renderTable);
 document.getElementById('statusFilter').addEventListener('change', renderTable);
 document.getElementById('channelFilter').addEventListener('change', renderTable);
 
-// ============================================
-// INIT + AUTO REFRESH
-// ============================================
 loadData();
 setInterval(loadData, REFRESH_INTERVAL_MS);
 </script>
