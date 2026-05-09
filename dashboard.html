@@ -594,9 +594,10 @@ function findCol(row, candidates) {
 
 function getStatusBadgeClass(status) {
   const s = normalizeKey(status);
+  if (s.includes('analizad')) return 'badge-lead';
   if (s.includes('lead') && !s.includes('contact')) return 'badge-lead';
   if (s.includes('contact')) return 'badge-contactado';
-  if (s.includes('conversa')) return 'badge-conversacion';
+  if (s.includes('conversa') || s.includes('respond')) return 'badge-conversacion';
   if (s.includes('calific')) return 'badge-calificado';
   if (s.includes('cita') || s.includes('agenda')) return 'badge-cita';
   if (s.includes('perdid') || s.includes('descart') || s.includes('cerrad')) return 'badge-perdido';
@@ -695,7 +696,7 @@ function renderKPIs() {
   const total = filteredData.length;
   const sample = filteredData[0] || allData[0] || {};
 
-  const statusCol = findCol(sample, ['estado', 'status', 'etapa', 'stage']);
+  const statusCol = findCol(sample, ['status', 'etapa', 'stage']);
   const projectCol = findCol(sample, ['proyecto', 'project', 'producto']);
 
   let citas = 0, calificadas = 0, contactados = 0, codefyCount = 0, fidelizaCount = 0;
@@ -732,7 +733,7 @@ function renderKPIs() {
 
 function renderGoals() {
   const sample = filteredData[0] || allData[0] || {};
-  const statusCol = findCol(sample, ['estado', 'status', 'etapa']);
+  const statusCol = findCol(sample, ['status', 'etapa']);
   const dateCol = findCol(sample, ['fecha contacto', 'fecha', 'fecha primer contacto', 'fecha seguimiento']);
 
   // Esta semana
@@ -780,12 +781,12 @@ function renderGoals() {
 
 function renderFunnel() {
   const sample = filteredData[0] || allData[0] || {};
-  const statusCol = findCol(sample, ['estado', 'status', 'etapa']);
+  const statusCol = findCol(sample, ['status', 'etapa']);
 
   const stages = [
-    { label: 'Lead', match: s => s && !s.includes('contact') && !s.includes('conversa') && !s.includes('cita') && !s.includes('calific') && !s.includes('perdid'), color: '#94a3b8' },
+    { label: 'Analizado', match: s => s.includes('analizad') || s.includes('lead') || (s && !s.includes('contact') && !s.includes('conversa') && !s.includes('cita') && !s.includes('calific') && !s.includes('perdid') && !s.includes('agenda')), color: '#94a3b8' },
     { label: 'Contactado', match: s => s.includes('contact') && !s.includes('conversa'), color: '#3b82f6' },
-    { label: 'En conversación', match: s => s.includes('conversa'), color: '#f59e0b' },
+    { label: 'En conversación', match: s => s.includes('conversa') || s.includes('respond'), color: '#f59e0b' },
     { label: 'Cita agendada', match: s => (s.includes('cita') || s.includes('agenda')) && !s.includes('calific'), color: '#8b5cf6' },
     { label: 'Calificada', match: s => s.includes('calific'), color: '#10b981' }
   ];
@@ -947,7 +948,7 @@ function renderFollowups() {
 
 function populateFilters() {
   const sample = filteredData[0] || allData[0] || {};
-  const statusCol = findCol(sample, ['estado', 'status', 'etapa']);
+  const statusCol = findCol(sample, ['status', 'etapa']);
   const channelCol = findCol(sample, ['canal', 'channel', 'medio']);
 
   if (statusCol) {
@@ -977,7 +978,7 @@ function renderTable() {
   const statusFilter = document.getElementById('statusFilter').value;
   const channelFilter = document.getElementById('channelFilter').value;
 
-  const statusCol = findCol(sample, ['estado', 'status', 'etapa']);
+  const statusCol = findCol(sample, ['status', 'etapa']);
   const channelCol = findCol(sample, ['canal', 'channel', 'medio']);
   const projectCol = findCol(sample, ['proyecto', 'project']);
 
