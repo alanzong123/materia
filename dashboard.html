@@ -594,11 +594,11 @@ function findCol(row, candidates) {
 
 function getStatusBadgeClass(status) {
   const s = normalizeKey(status);
-  if (s.includes('analizad')) return 'badge-lead';
-  if (s.includes('lead') && !s.includes('contact')) return 'badge-lead';
+  if (s.includes('lead')) return 'badge-lead';
   if (s.includes('contact')) return 'badge-contactado';
-  if (s.includes('conversa') || s.includes('respond')) return 'badge-conversacion';
-  if (s.includes('calific')) return 'badge-calificado';
+  if (s.includes('reuni') || s.includes('cita') || s.includes('agenda') || s.includes('conversa')) return 'badge-cita';
+  if (s.includes('pagan') || s.includes('cerrad') || s.includes('calific')) return 'badge-calificado';
+  if (s.includes('muert') || s.includes('perdid') || s.includes('descart')) return 'badge-perdido';
   if (s.includes('cita') || s.includes('agenda')) return 'badge-cita';
   if (s.includes('perdid') || s.includes('descart') || s.includes('cerrad')) return 'badge-perdido';
   return 'badge-lead';
@@ -699,13 +699,15 @@ function renderKPIs() {
   const statusCol = findCol(sample, ['status', 'etapa', 'stage']);
   const projectCol = findCol(sample, ['proyecto', 'project', 'producto']);
 
-  let citas = 0, calificadas = 0, contactados = 0, codefyCount = 0, fidelizaCount = 0;
+  let reuniones = 0, mePagan = 0, contactados = 0, muertos = 0, codefyCount = 0, fidelizaCount = 0;
 
   filteredData.forEach(r => {
     const status = (r[statusCol] || '').toString().toLowerCase();
-    if (status.includes('cita') || status.includes('agenda')) citas++;
-    if (status.includes('calific')) calificadas++;
-    if (status.includes('contact') || status.includes('conversa') || status.includes('cita') || status.includes('calific')) contactados++;
+    if (status.includes('reuni') || status.includes('cita') || status.includes('agenda') || status.includes('conversa')) reuniones++;
+    if (status.includes('pagan') || status.includes('cerrad')) mePagan++;
+    if (status.includes('muert') || status.includes('perdid')) muertos++;
+    // Contactado = todos los que ya pasaron de lead (incluye contactado, reunion, me pagan)
+    if (status.includes('contact') || status.includes('reuni') || status.includes('cita') || status.includes('agenda') || status.includes('conversa') || status.includes('pagan') || status.includes('cerrad')) contactados++;
 
     const proj = (r[projectCol] || '').toString().toLowerCase();
     if (proj.includes('codefy')) codefyCount++;
@@ -713,12 +715,13 @@ function renderKPIs() {
   });
 
   const tasaContacto = total > 0 ? Math.round((contactados / total) * 100) : 0;
+  const totalActivos = total - muertos; // leads no muertos
 
   const kpis = [
     { label: 'Total leads', value: total, sub: `${codefyCount} Codefy · ${fidelizaCount} Fideliza`, color: 'var(--accent)', icon: '👥' },
     { label: 'Contactados', value: contactados, sub: `${tasaContacto}% del total`, color: 'var(--blue)', icon: '✉️' },
-    { label: 'Citas agendadas', value: citas, sub: total > 0 ? `${Math.round((citas/total)*100)}% conversión` : '—', color: 'var(--accent-2)', icon: '📅' },
-    { label: 'Citas calificadas', value: calificadas, sub: citas > 0 ? `${Math.round((calificadas/citas)*100)}% de las citas` : '—', color: 'var(--green)', icon: '✅' }
+    { label: 'Reuniones', value: reuniones, sub: contactados > 0 ? `${Math.round((reuniones/contactados)*100)}% de contactados` : '—', color: 'var(--accent-2)', icon: '📅' },
+    { label: 'Me pagan 💰', value: mePagan, sub: reuniones > 0 ? `${Math.round((mePagan/reuniones)*100)}% de reuniones` : '—', color: 'var(--green)', icon: '🤑' }
   ];
 
   document.getElementById('kpiGrid').innerHTML = kpis.map(k => `
@@ -742,7 +745,7 @@ function renderGoals() {
   weekStart.setDate(today.getDate() - today.getDay() + 1); // lunes
   weekStart.setHours(0,0,0,0);
 
-  let toquesEstaSem = 0, citasEstaSem = 0, calificadasEstaSem = 0, toquesHoy = 0;
+  let toquesEstaSem = 0, reunionesEstaSem = 0, mePaganEstaSem = 0, toquesHoy = 0;
 
   filteredData.forEach(r => {
     const date = parseDate(r[dateCol]);
@@ -750,8 +753,8 @@ function renderGoals() {
     const status = (r[statusCol] || '').toString().toLowerCase();
     if (date >= weekStart) {
       toquesEstaSem++;
-      if (status.includes('cita') || status.includes('agenda')) citasEstaSem++;
-      if (status.includes('calific')) calificadasEstaSem++;
+      if (status.includes('reuni') || status.includes('cita') || status.includes('agenda') || status.includes('conversa')) reunionesEstaSem++;
+      if (status.includes('pagan') || status.includes('cerrad')) mePaganEstaSem++;
     }
     const todayStart = new Date(); todayStart.setHours(0,0,0,0);
     if (date >= todayStart) toquesHoy++;
@@ -760,8 +763,8 @@ function renderGoals() {
   const goals = [
     { label: 'Toques hoy', current: toquesHoy, target: GOALS.toquesDiarios },
     { label: 'Toques esta semana', current: toquesEstaSem, target: GOALS.toquesSemanales },
-    { label: 'Citas esta semana', current: citasEstaSem, target: GOALS.citasSemanales },
-    { label: 'Calificadas esta semana', current: calificadasEstaSem, target: GOALS.citasCalificadasSemanales }
+    { label: 'Reuniones esta semana', current: reunionesEstaSem, target: GOALS.citasSemanales },
+    { label: 'Cierres esta semana 💰', current: mePaganEstaSem, target: GOALS.citasCalificadasSemanales }
   ];
 
   document.getElementById('goalsGrid').innerHTML = goals.map(g => {
@@ -784,11 +787,11 @@ function renderFunnel() {
   const statusCol = findCol(sample, ['status', 'etapa']);
 
   const stages = [
-    { label: 'Analizado', match: s => s.includes('analizad') || s.includes('lead') || (s && !s.includes('contact') && !s.includes('conversa') && !s.includes('cita') && !s.includes('calific') && !s.includes('perdid') && !s.includes('agenda')), color: '#94a3b8' },
-    { label: 'Contactado', match: s => s.includes('contact') && !s.includes('conversa'), color: '#3b82f6' },
-    { label: 'En conversación', match: s => s.includes('conversa') || s.includes('respond'), color: '#f59e0b' },
-    { label: 'Cita agendada', match: s => (s.includes('cita') || s.includes('agenda')) && !s.includes('calific'), color: '#8b5cf6' },
-    { label: 'Calificada', match: s => s.includes('calific'), color: '#10b981' }
+    { label: 'Lead', match: s => s.trim() === 'lead' || (s && !s.includes('contact') && !s.includes('reuni') && !s.includes('pagan') && !s.includes('muert') && !s.includes('cita') && !s.includes('agenda') && !s.includes('conversa') && !s.includes('calific') && !s.includes('perdid')), color: '#94a3b8' },
+    { label: 'Contactado', match: s => s.includes('contact'), color: '#3b82f6' },
+    { label: 'Reunión', match: s => s.includes('reuni') || s.includes('cita') || s.includes('agenda') || s.includes('conversa'), color: '#8b5cf6' },
+    { label: 'Me pagan 💰', match: s => s.includes('pagan') || s.includes('cerrad') || s.includes('calific'), color: '#10b981' },
+    { label: 'Muerte 💀', match: s => s.includes('muert') || s.includes('perdid') || s.includes('descart'), color: '#ef4444' }
   ];
 
   const counts = stages.map(stage => {
