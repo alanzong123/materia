@@ -471,6 +471,8 @@ tr:hover td { background: rgba(99, 102, 241, 0.04); }
       </div>
     </div>
 
+    <div id="debugInfo" style="font-size: 11px; color: var(--text-muted); padding: 8px 14px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; margin-bottom: 16px;"></div>
+
     <div class="motivation-banner" id="motivationBanner"></div>
 
     <div class="section-title">Resumen del período</div>
@@ -518,24 +520,7 @@ tr:hover td { background: rgba(99, 102, 241, 0.04); }
     <div class="section-title">📋 Feedback para tu 1:1 del viernes</div>
     <div class="feedback-grid" id="feedbackGrid"></div>
 
-    <div class="panel">
-      <div class="panel-title">
-        <span>Base de leads</span>
-        <span class="panel-title-sub" id="tableCount"></span>
-      </div>
-      <div class="table-controls">
-        <input type="text" class="search-input" id="searchInput" placeholder="Buscar empresa, persona, cargo…">
-        <select class="filter-select" id="statusFilter"><option value="">Todos los status</option></select>
-        <select class="filter-select" id="channelFilter"><option value="">Todos los canales</option></select>
-      </div>
-      <div class="table-wrap">
-        <table id="dataTable">
-          <thead><tr id="tableHead"></tr></thead>
-          <tbody id="tableBody"></tbody>
-        </table>
-      </div>
-      <div class="last-updated" id="lastUpdated"></div>
-    </div>
+    <div class="last-updated" id="lastUpdated" style="text-align: center; padding: 16px;"></div>
 
   </div>
 
@@ -665,7 +650,7 @@ function applyFilters() {
   if (allData.length === 0) return;
   const sample = allData[0];
   const projectCol = findCol(sample, ['proyecto', 'project', 'producto']);
-  const dateCol = findCol(sample, ['fecha contacto', 'fecha primer contacto', 'fecha de contacto', 'fecha']);
+  const dateCol = findCol(sample, ['date', 'fecha contacto', 'fecha primer contacto', 'fecha de contacto', 'fecha']);
 
   let data = [...allData];
   if (currentProduct !== 'all' && projectCol) {
@@ -694,6 +679,20 @@ function applyFilters() {
     dataInPeriod = data;
   }
 
+  // Debug info para verificación
+  const debugEl = document.getElementById('debugInfo');
+  if (debugEl) {
+    const fmt = (d) => d ? d.toISOString().split('T')[0] : 'sin filtro';
+    const colsFound = `Date: <strong>${dateCol || 'NO ENCONTRADA'}</strong>`;
+    debugEl.innerHTML = `
+      📅 Hoy: <strong>${fmt(today)}</strong> ·
+      Filtro desde: <strong>${fmt(cutoff)}</strong> ·
+      Total en Sheet: <strong>${allData.length}</strong> ·
+      Después de filtros: <strong>${dataInPeriod.length}</strong> ·
+      Columna fecha: <strong>${dateCol || 'NO ENCONTRADA'}</strong>
+    `;
+  }
+
   renderAll();
 }
 
@@ -706,8 +705,6 @@ function renderAll() {
   renderProductConversion();
   renderFollowups();
   renderFeedback();
-  renderTable();
-  populateFilters();
 }
 
 function renderMotivationBanner() {
@@ -1112,7 +1109,7 @@ function renderProductConversion() {
 
 function renderFollowups() {
   const sample = allData[0] || {};
-  const fuCol = findCol(sample, ['fecha seguimiento', 'fecha proximo seguimiento', 'proximo seguimiento', 'siguiente paso fecha']);
+  const fuCol = findCol(sample, ['proximo paso', 'próximo paso', 'fecha seguimiento', 'fecha proximo seguimiento', 'proximo seguimiento', 'siguiente paso fecha']);
   const empCol = findCol(sample, ['empresa', 'company', 'cuenta']);
   const persCol = findCol(sample, ['persona', 'contacto', 'nombre', 'lead']);
 
@@ -1285,92 +1282,6 @@ function renderFeedback() {
   `;
 }
 
-function populateFilters() {
-  const sample = dataInPeriod[0] || allData[0] || {};
-  const statusCol = findCol(sample, ['status', 'etapa']);
-  const channelCol = findCol(sample, ['canal', 'channel', 'medio']);
-
-  if (statusCol) {
-    const values = [...new Set(allData.map(r => r[statusCol]).filter(Boolean))];
-    const sel = document.getElementById('statusFilter');
-    const cur = sel.value;
-    sel.innerHTML = '<option value="">Todos los status</option>' + values.map(v => `<option value="${v}">${v}</option>`).join('');
-    sel.value = cur;
-  }
-  if (channelCol) {
-    const values = [...new Set(allData.map(r => r[channelCol]).filter(Boolean))];
-    const sel = document.getElementById('channelFilter');
-    const cur = sel.value;
-    sel.innerHTML = '<option value="">Todos los canales</option>' + values.map(v => `<option value="${v}">${v}</option>`).join('');
-    sel.value = cur;
-  }
-}
-
-function renderTable() {
-  const sample = dataInPeriod[0] || allData[0] || {};
-  if (!sample) return;
-  const search = document.getElementById('searchInput').value.toLowerCase();
-  const statusFilter = document.getElementById('statusFilter').value;
-  const channelFilter = document.getElementById('channelFilter').value;
-  const statusCol = findCol(sample, ['status', 'etapa']);
-  const channelCol = findCol(sample, ['canal', 'channel', 'medio']);
-  const projectCol = findCol(sample, ['proyecto', 'project']);
-
-  let rows = dataInPeriod.filter(r => {
-    if (search && !Object.values(r).join(' ').toLowerCase().includes(search)) return false;
-    if (statusFilter && r[statusCol] !== statusFilter) return false;
-    if (channelFilter && r[channelCol] !== channelFilter) return false;
-    return true;
-  });
-
-  if (sortState.col) {
-    rows.sort((a, b) => {
-      const va = (a[sortState.col] || '').toString().toLowerCase();
-      const vb = (b[sortState.col] || '').toString().toLowerCase();
-      if (va < vb) return sortState.asc ? -1 : 1;
-      if (va > vb) return sortState.asc ? 1 : -1;
-      return 0;
-    });
-  }
-
-  document.getElementById('tableCount').textContent = `${rows.length} de ${dataInPeriod.length}`;
-
-  const displayCols = columns.filter(c => c && c.trim());
-  document.getElementById('tableHead').innerHTML = displayCols.map(c => {
-    const isSorted = sortState.col === c;
-    const arrow = isSorted ? (sortState.asc ? ' ↑' : ' ↓') : '';
-    return `<th class="${isSorted?'sorted':''}" data-col="${c}">${c}${arrow}</th>`;
-  }).join('');
-
-  document.querySelectorAll('#tableHead th').forEach(th => {
-    th.addEventListener('click', () => {
-      const col = th.dataset.col;
-      if (sortState.col === col) sortState.asc = !sortState.asc;
-      else { sortState.col = col; sortState.asc = true; }
-      renderTable();
-    });
-  });
-
-  if (rows.length === 0) {
-    document.getElementById('tableBody').innerHTML =
-      `<tr><td colspan="${displayCols.length}" style="text-align:center; padding: 40px; color: var(--text-muted);">Sin resultados en este período</td></tr>`;
-    return;
-  }
-
-  document.getElementById('tableBody').innerHTML = rows.map(r => {
-    return '<tr>' + displayCols.map(c => {
-      let v = r[c] || '';
-      if (c === statusCol && v) v = `<span class="badge ${getStatusBadgeClass(v)}">${v}</span>`;
-      else if (c === projectCol && v) {
-        const cls = v.toLowerCase().includes('codefy') ? 'badge-codefy' : v.toLowerCase().includes('fideliza') ? 'badge-fideliza' : 'badge-lead';
-        v = `<span class="badge ${cls}">${v}</span>`;
-      } else if (typeof v === 'string' && (v.startsWith('http://') || v.startsWith('https://'))) {
-        v = `<a href="${v}" target="_blank" style="color: var(--accent);">↗ Link</a>`;
-      }
-      return `<td>${v}</td>`;
-    }).join('') + '</tr>';
-  }).join('');
-}
 
 document.querySelectorAll('#periodTabs .tab').forEach(tab => {
   tab.addEventListener('click', () => {
@@ -1390,9 +1301,9 @@ document.querySelectorAll('#productTabs .tab').forEach(tab => {
   });
 });
 
-document.getElementById('searchInput').addEventListener('input', renderTable);
-document.getElementById('statusFilter').addEventListener('change', renderTable);
-document.getElementById('channelFilter').addEventListener('change', renderTable);
+document.getElementById('searchInput')?.addEventListener('input', () => {});
+document.getElementById('statusFilter')?.addEventListener('change', () => {});
+document.getElementById('channelFilter')?.addEventListener('change', () => {});
 
 loadData();
 setInterval(loadData, REFRESH_INTERVAL_MS);
