@@ -632,31 +632,135 @@ function pct(num, den) {
   return Math.round((num / den) * 100);
 }
 
-async function loadData() {
-  document.getElementById('loadingState').style.display = 'block';
+// ----- Cache + fetch robusto -----
+const CACHE_KEY = 'dashboard_csv_cache_v1';
+const CACHE_TS_KEY = 'dashboard_csv_cache_ts_v1';
+
+function saveCache(text) {
+  try {
+    localStorage.setItem(CACHE_KEY, text);
+    localStorage.setItem(CACHE_TS_KEY, Date.now().toString());
+  } catch (e) { /* quota lleno: ignorar */ }
+}
+
+function loadCache() {
+  try {
+    const text = localStorage.getItem(CACHE_KEY);
+    const ts = parseInt(localStorage.getItem(CACHE_TS_KEY) || '0');
+    if (text && ts) return { text, ts };
+  } catch (e) {}
+  return null;
+}
+
+function parseCsvIntoState(text) {
+  const parsed = Papa.parse(text, { header: true, skipEmptyLines: true });
+  const rows = parsed.data.filter(r => Object.values(r).some(v => v && v.toString().trim()));
+  if (rows.length === 0) throw new Error('El Sheet está vacío.');
+  allData = rows;
+  columns = parsed.meta.fields || [];
+}
+
+function showDashboard(staleMinutes) {
+  document.getElementById('loadingState').style.display = 'none';
   document.getElementById('errorState').style.display = 'none';
+  document.getElementById('dashboardContent').style.display = 'block';
+  applyFilters();
+  const now = new Date().toLocaleString('es-MX');
+  const staleNote = staleMinutes != null
+    ? ` · ⚠️ datos desde cache de hace ${staleMinutes} min (reintentando…)`
+    : '';
+  document.getElementById('lastUpdated').textContent =
+    'Última actualización: ' + now + staleNote;
+}
+
+function showError(msg) {
+  document.getElementById('loadingState').style.display = 'none';
   document.getElementById('dashboardContent').style.display = 'none';
+  document.getElementById('errorState').style.display = 'block';
+  document.getElementById('errorMessage').textContent = msg;
+}
+
+// Un solo intento contra el CSV publicado
+async function fetchCsvOnce() {
+  const url = CSV_URL + (CSV_URL.includes('?') ? '&' : '?') + 't=' + Date.now();
+  const response = await fetch(url, { cache: 'no-store' });
+  if (response.status === 429) {
+    const err = new Error('Rate limited (429)');
+    err.code = 429;
+    throw err;
+  }
+  if (!response.ok) throw new Error('HTTP ' + response.status);
+  return response.text();
+}
+
+// Fetch con backoff exponencial: 4 intentos, 1s, 2s, 4s, 8s
+async function fetchCsvWithRetry() {
+  const delays = [1000, 2000, 4000, 8000];
+  let lastErr;
+  for (let i = 0; i < delays.length; i++) {
+    try {
+      return await fetchCsvOnce();
+    } catch (err) {
+      lastErr = err;
+      // En 429 esperamos más
+      const wait = err.code === 429 ? Math.min(delays[i] * 3, 30000) : delays[i];
+      if (i < delays.length - 1) {
+        await new Promise(r => setTimeout(r, wait));
+      }
+    }
+  }
+  throw lastErr;
+}
+
+let isLoading = false;
+let isFirstLoad = true;
+
+async function loadData() {
+  if (isLoading) return; // no encimar requests
+  isLoading = true;
+
+  // En primera carga, mostramos "Cargando" solo si no hay cache.
+  // En refrescos automáticos, NUNCA borramos la UI: solo intentamos actualizar.
+  const cache = loadCache();
+  if (isFirstLoad) {
+    if (cache) {
+      // Pintamos inmediato desde cache para que el usuario vea algo
+      try {
+        parseCsvIntoState(cache.text);
+        const ageMin = Math.round((Date.now() - cache.ts) / 60000);
+        showDashboard(ageMin);
+      } catch (e) { /* cache corrupta, ignoramos */ }
+    } else {
+      document.getElementById('loadingState').style.display = 'block';
+      document.getElementById('errorState').style.display = 'none';
+      document.getElementById('dashboardContent').style.display = 'none';
+    }
+  }
 
   try {
-    const url = CSV_URL + (CSV_URL.includes('?') ? '&' : '?') + 't=' + Date.now();
-    const response = await fetch(url);
-    if (!response.ok) throw new Error('HTTP ' + response.status);
-    const text = await response.text();
-    const parsed = Papa.parse(text, { header: true, skipEmptyLines: true });
-    allData = parsed.data.filter(r => Object.values(r).some(v => v && v.toString().trim()));
-    columns = parsed.meta.fields || [];
-    if (allData.length === 0) throw new Error('El Sheet está vacío.');
-
-    document.getElementById('loadingState').style.display = 'none';
-    document.getElementById('dashboardContent').style.display = 'block';
-    applyFilters();
-    document.getElementById('lastUpdated').textContent =
-      'Última actualización: ' + new Date().toLocaleString('es-MX');
+    const text = await fetchCsvWithRetry();
+    parseCsvIntoState(text);
+    saveCache(text);
+    showDashboard(null);
+    isFirstLoad = false;
   } catch (err) {
-    document.getElementById('loadingState').style.display = 'none';
-    document.getElementById('errorState').style.display = 'block';
-    document.getElementById('errorMessage').textContent =
-      'Error al cargar el Sheet: ' + err.message + '. Verifica que esté publicado como CSV.';
+    // Falló el fetch. Si tenemos cache, seguimos mostrándola.
+    if (cache) {
+      try {
+        parseCsvIntoState(cache.text);
+        const ageMin = Math.round((Date.now() - cache.ts) / 60000);
+        showDashboard(ageMin);
+      } catch (e) {
+        showError('Error al cargar el Sheet: ' + err.message + '. Verifica que esté publicado como CSV.');
+      }
+    } else {
+      // Sin cache y sin red: mostrar error solo en primera carga
+      if (isFirstLoad) {
+        showError('Error al cargar el Sheet: ' + err.message + '. Verifica que esté publicado como CSV.');
+      }
+    }
+  } finally {
+    isLoading = false;
   }
 }
 
