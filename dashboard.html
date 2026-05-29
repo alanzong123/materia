@@ -531,7 +531,7 @@ const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRT1czGk5oSXvz8
 const REFRESH_INTERVAL_MS = 60000;
 
 const GOALS = {
-  toquesDiarios: 50,
+  toquesDiarios: 20,
   toquesSemanales: 250,
   toquesMensuales: 1100,
   reunionesSemanales: 10,
@@ -1329,7 +1329,7 @@ function renderFeedback() {
   if (contactados >= 10 && tasaReunion < 10) warnings.push(`Solo ${tasaReunion}% de contactados pasan a reunión. El copy o el pitch no está enganchando.`);
   if (reuniones >= 5 && tasaCierre < 15) warnings.push(`${tasaCierre}% de cierre desde reunión. O las citas no son calificadas o el equipo de cierre no convierte. Revisar criterios de calidad.`);
   if (currentPeriod === 'semana' && total < GOALS.toquesSemanales * 0.5) warnings.push(`Solo ${total} toques esta semana, muy debajo de la meta de ${GOALS.toquesSemanales}. El volumen es la base de todo.`);
-  if (currentPeriod === 'hoy' && total < GOALS.toquesDiarios * 0.5) warnings.push(`${total} toques hoy. A este ritmo no llega a los 50 diarios.`);
+  if (currentPeriod === 'hoy' && total < GOALS.toquesDiarios * 0.5) warnings.push(`${total} toques hoy. A este ritmo no llega a los ${GOALS.toquesDiarios} diarios.`);
 
   const worstChannel = Object.entries(channelStats)
     .filter(([_, d]) => d.total >= 5)
